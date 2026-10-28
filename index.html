@@ -1,0 +1,1052 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="ClearPass: clickable prototype of a PCC compliance platform for gig-worker fleets.">
+<style>:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0;font:14px/1.5 system-ui,-apple-system,sans-serif}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>ClearPass PCC Portal</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: sticky top bar with a role switcher, one working canvas below (max 1180px); the field agent view sits in a phone frame.
+   Identity: rubber-stamp violet on cool, violet-tinted neutrals; challan numbers and IDs in mono. */
+:root {
+  --bg: #f4f4f9; --surface: #ffffff; --surface-2: #eeeef6; --line: #dcdce9; --line-2: #c6c6d9;
+  --ink: #1a1a2c; --ink-2: #565672; --ink-3: #8686a0;
+  --accent: #4b3bb0; --accent-ink: #ffffff; --accent-soft: #ebe8fb; --accent-mid: #a197e3;
+  --good: #1b8357; --good-soft: #e0f2e8; --warn: #a35f00; --warn-soft: #fcefd6; --bad: #bf3434; --bad-soft: #fae3e3;
+  --seg-none: #e1e1ec;
+  --shadow: 0 1px 2px rgba(24, 20, 60, .06), 0 6px 20px rgba(24, 20, 60, .06);
+  --display: 'Bricolage Grotesque', 'Avenir Next', 'Segoe UI', system-ui, sans-serif;
+  --body: 'IBM Plex Sans', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --mono: 'IBM Plex Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+  --r: 10px;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #121220; --surface: #1b1b2c; --surface-2: #242438; --line: #2f2f47; --line-2: #3f3f5b;
+  --ink: #ececf6; --ink-2: #a8a8c2; --ink-3: #78789a;
+  --accent: #a094f3; --accent-ink: #16122f; --accent-soft: #2a2552; --accent-mid: #6a5fc4;
+  --good: #52c690; --good-soft: #163428; --warn: #e8a640; --warn-soft: #382a12; --bad: #f27474; --bad-soft: #3c1d22;
+  --seg-none: #2d2d45; --shadow: 0 1px 2px rgba(0,0,0,.35), 0 6px 20px rgba(0,0,0,.25);
+  color-scheme: dark;
+} }
+:root[data-theme="dark"] {
+  --bg: #121220; --surface: #1b1b2c; --surface-2: #242438; --line: #2f2f47; --line-2: #3f3f5b;
+  --ink: #ececf6; --ink-2: #a8a8c2; --ink-3: #78789a;
+  --accent: #a094f3; --accent-ink: #16122f; --accent-soft: #2a2552; --accent-mid: #6a5fc4;
+  --good: #52c690; --good-soft: #163428; --warn: #e8a640; --warn-soft: #382a12; --bad: #f27474; --bad-soft: #3c1d22;
+  --seg-none: #2d2d45; --shadow: 0 1px 2px rgba(0,0,0,.35), 0 6px 20px rgba(0,0,0,.25);
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body { background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 14px; line-height: 1.5; }
+body::before { content: ""; position: fixed; inset: 0 0 auto; height: env(safe-area-inset-top, 0px); z-index: 30; background: var(--surface); }
+button, input, select, textarea { font: inherit; color: inherit; }
+button { cursor: pointer; }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+h1, h2, h3 { font-family: var(--display); font-weight: 600; margin: 0; text-wrap: balance; letter-spacing: -0.01em; }
+h1 { font-size: 26px; line-height: 1.15; }
+h2 { font-size: 18px; }
+h3 { font-size: 15px; }
+.num { font-variant-numeric: tabular-nums; }
+.mono { font-family: var(--mono); font-size: 12.5px; }
+.muted { color: var(--ink-2); }
+.faint { color: var(--ink-3); }
+.small { font-size: 12.5px; }
+.label { font-size: 11.5px; text-transform: uppercase; letter-spacing: .07em; color: var(--ink-3); font-weight: 600; }
+
+.wrap { max-width: 1180px; margin: 0 auto; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+.top { position: sticky; top: env(safe-area-inset-top, 0px); z-index: 20; background: var(--surface); border-bottom: 1px solid var(--line); }
+.top-in { display: flex; align-items: center; gap: 16px 24px; flex-wrap: wrap; padding-block: 10px; }
+.brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.brand svg { width: 30px; height: 30px; flex: none; color: var(--accent); }
+.wordmark { font-family: var(--display); font-weight: 700; font-size: 21px; letter-spacing: -0.02em; }
+.client { font-size: 12.5px; color: var(--ink-2); border-left: 1px solid var(--line); padding-left: 10px; }
+.roles { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; margin-left: auto; }
+.rgroup { font-size: 10.5px; text-transform: uppercase; letter-spacing: .08em; color: var(--ink-3); font-weight: 600; padding: 0 6px 0 10px; }
+.roles button { border: 1px solid transparent; background: transparent; padding: 6px 12px; border-radius: 999px; color: var(--ink-2); font-weight: 500; }
+.roles button:hover { background: var(--surface-2); color: var(--ink); }
+.roles button.on { background: var(--accent); color: var(--accent-ink); }
+.proto { font-size: 12.5px; color: var(--ink-2); padding-block: 8px 0; }
+.proto b { color: var(--accent); font-weight: 600; }
+.main { padding-block: 18px 64px; display: grid; gap: 18px; }
+
+.head { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px 20px; flex-wrap: wrap; }
+.head p { margin: 4px 0 0; color: var(--ink-2); max-width: 68ch; }
+.card { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 16px; min-width: 0; }
+.card > h2, .card > .ch { margin-bottom: 12px; }
+.ch { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+.grid2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr)); gap: 18px; }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: 12px; }
+.kpi { background: var(--surface); border: 1px solid var(--line); border-radius: var(--r); padding: 14px 16px; display: grid; gap: 2px; }
+.kpi .v { font-family: var(--display); font-size: 34px; font-weight: 600; line-height: 1.1; font-variant-numeric: tabular-nums; }
+.kpi.hero { background: var(--accent-soft); border-color: var(--accent-mid); }
+.kpi.hero .v { color: var(--accent); }
+.meter { height: 6px; background: var(--seg-none); border-radius: 99px; overflow: hidden; margin-top: 8px; }
+.meter i { display: block; height: 100%; background: var(--accent); border-radius: 99px; }
+
+.btn { display: inline-flex; align-items: center; gap: 6px; border: 1px solid var(--line-2); background: var(--surface); padding: 7px 14px; border-radius: 8px; font-weight: 500; white-space: nowrap; }
+.btn:hover { border-color: var(--ink-3); }
+.btn.pri { background: var(--accent); border-color: var(--accent); color: var(--accent-ink); }
+.btn.pri:hover { filter: brightness(1.08); }
+.btn.ghost { border-color: transparent; background: transparent; color: var(--accent); padding-inline: 8px; }
+.btn.sm { padding: 4px 10px; font-size: 12.5px; }
+.btn:disabled { opacity: .45; cursor: not-allowed; filter: none; }
+.btns { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+.field { display: grid; gap: 4px; }
+.field label { font-size: 12px; color: var(--ink-2); font-weight: 500; }
+input[type=text], input[type=date], input[type=search], input[type=number], input[type=tel], select, textarea {
+  border: 1px solid var(--line-2); background: var(--surface); border-radius: 8px; padding: 7px 10px; min-width: 0; width: 100%;
+}
+textarea { resize: vertical; }
+.tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--line); overflow-x: auto; }
+.tabs button { border: 0; background: none; padding: 9px 14px; color: var(--ink-2); font-weight: 500; border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap; }
+.tabs button.on { color: var(--ink); border-bottom-color: var(--accent); }
+.tabs .count { font-size: 11.5px; background: var(--surface-2); border-radius: 99px; padding: 1px 7px; margin-left: 4px; color: var(--ink-2); }
+.chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.chipf { border: 1px solid var(--line-2); background: var(--surface); padding: 4px 11px; border-radius: 99px; font-size: 12.5px; color: var(--ink-2); }
+.chipf.on { border-color: var(--accent); background: var(--accent-soft); color: var(--ink); }
+
+.pill { display: inline-flex; align-items: center; gap: 6px; padding: 2px 9px; border-radius: 99px; font-size: 12px; font-weight: 500; white-space: nowrap; }
+.p-req { background: var(--surface-2); color: var(--ink-2); }
+.p-sch { background: var(--accent-soft); color: var(--accent); }
+.p-live { background: var(--accent); color: var(--accent-ink); }
+.p-grd { background: var(--warn-soft); color: var(--warn); }
+.p-bo { background: var(--accent-soft); color: var(--ink); border: 1px dashed var(--accent-mid); }
+.p-done { background: var(--good-soft); color: var(--good); }
+.dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; animation: pulse 1.6s ease-in-out infinite; }
+@keyframes pulse { 50% { opacity: .35; } }
+@media (prefers-reduced-motion: reduce) { .dot, .spin { animation: none; } }
+.chip { display: inline-block; padding: 1px 8px; border-radius: 6px; font-size: 12px; font-weight: 500; white-space: nowrap; }
+.c-req { background: var(--surface-2); color: var(--ink-2); }
+.c-acc { background: var(--accent-soft); color: var(--accent); }
+.c-up { background: var(--accent); color: var(--accent-ink); }
+.c-ch { background: var(--good-soft); color: var(--good); }
+.c-ex { background: var(--warn-soft); color: var(--warn); }
+.c-ok { border: 1px solid var(--good); color: var(--good); }
+.flag { display: inline-flex; align-items: center; gap: 4px; font-size: 11.5px; font-weight: 600; color: var(--bad); background: var(--bad-soft); padding: 1px 7px; border-radius: 6px; white-space: nowrap; }
+
+.tw { overflow-x: auto; border: 1px solid var(--line); border-radius: var(--r); background: var(--surface); }
+table { border-collapse: collapse; width: 100%; font-size: 13.5px; }
+th { text-align: left; font-size: 11.5px; text-transform: uppercase; letter-spacing: .06em; color: var(--ink-3); font-weight: 600; padding: 10px 12px; border-bottom: 1px solid var(--line); background: var(--surface); position: sticky; top: 0; white-space: nowrap; }
+td { padding: 10px 12px; border-bottom: 1px solid var(--line); vertical-align: middle; }
+tr:last-child td { border-bottom: 0; }
+tr.click { cursor: pointer; }
+tr.click:hover td { background: var(--surface-2); }
+td.r, th.r { text-align: right; }
+.fbar { display: flex; height: 10px; border-radius: 99px; overflow: hidden; background: var(--seg-none); min-width: 140px; gap: 1px; }
+.seg { display: block; height: 100%; }
+.sg-ch { background: var(--good); } .sg-up { background: var(--accent); } .sg-pe { background: var(--accent-mid); } .sg-no { background: var(--seg-none); } .sg-ex { background: var(--warn); }
+.legend { display: flex; gap: 14px; flex-wrap: wrap; font-size: 12px; color: var(--ink-2); }
+.legend i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 5px; vertical-align: -1px; }
+
+.cityrow { display: grid; grid-template-columns: minmax(110px, 160px) 1fr auto; align-items: center; gap: 12px; padding: 8px 6px; border-radius: 8px; border: 0; background: none; width: 100%; text-align: left; }
+.cityrow:hover { background: var(--surface-2); }
+.track { height: 12px; background: var(--seg-none); border-radius: 99px; overflow: hidden; }
+.track i { display: block; height: 100%; background: var(--accent); border-radius: 99px; }
+.stgroup { margin: 10px 0 2px; }
+.funnel { display: grid; gap: 10px; }
+.frow { display: grid; grid-template-columns: minmax(150px, 190px) 1fr; gap: 12px; align-items: center; }
+.fb { height: 26px; background: var(--accent); border-radius: 6px; display: flex; align-items: center; padding: 0 10px; color: var(--accent-ink); font-weight: 600; font-variant-numeric: tabular-nums; min-width: 44px; }
+.fb.last { background: var(--good); color: var(--surface); }
+.fdrop { font-size: 12px; color: var(--ink-3); margin-left: 8px; font-weight: 400; }
+.risk { display: grid; gap: 8px; }
+.riskrow { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: none; text-align: left; width: 100%; }
+.riskrow:hover { border-color: var(--accent-mid); }
+.riskrow .cov { font-family: var(--display); font-size: 20px; font-weight: 600; font-variant-numeric: tabular-nums; }
+svg.chart text { fill: var(--ink-3); font-size: 11px; font-family: var(--body); }
+svg.chart .bar { fill: var(--good); }
+svg.chart .bar.now { fill: var(--accent); }
+svg.chart .grid { stroke: var(--line); }
+svg.chart .val { fill: var(--ink); font-weight: 600; }
+
+.steps { display: flex; gap: 0; flex-wrap: wrap; }
+.step { flex: 1 1 120px; padding: 10px 12px 10px 0; position: relative; display: grid; gap: 4px; min-width: 110px; }
+.step .bar { height: 4px; border-radius: 99px; background: var(--seg-none); margin-right: 6px; }
+.step.done .bar { background: var(--good); }
+.step.cur .bar { background: var(--accent); }
+.step .t { font-size: 12.5px; color: var(--ink-3); font-weight: 500; }
+.step.done .t, .step.cur .t { color: var(--ink); }
+.stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 150px), 1fr)); gap: 10px; }
+.stat { border: 1px solid var(--line); border-radius: 8px; padding: 10px 12px; }
+.stat .v { font-family: var(--display); font-size: 24px; font-weight: 600; font-variant-numeric: tabular-nums; }
+.meta { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 220px), 1fr)); gap: 12px 20px; }
+.meta div { min-width: 0; overflow-wrap: anywhere; }
+.log { display: grid; gap: 0; }
+.log div { display: grid; grid-template-columns: 92px 1fr; gap: 10px; padding: 7px 0; border-bottom: 1px dashed var(--line); font-size: 13px; }
+.log div:last-child { border-bottom: 0; }
+.back { border: 0; background: none; color: var(--accent); padding: 0; font-weight: 500; }
+
+/* wizard */
+.wsteps { display: flex; gap: 8px; flex-wrap: wrap; }
+.wstep { display: flex; align-items: center; gap: 8px; padding: 6px 12px 6px 6px; border-radius: 99px; background: var(--surface-2); color: var(--ink-2); font-weight: 500; font-size: 13px; }
+.wstep b { width: 22px; height: 22px; border-radius: 50%; display: grid; place-items: center; background: var(--surface); font-size: 12px; }
+.wstep.on { background: var(--accent-soft); color: var(--ink); }
+.wstep.on b { background: var(--accent); color: var(--accent-ink); }
+.wstep.ok b { background: var(--good); color: var(--surface); }
+.pickrow { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-bottom: 1px solid var(--line); }
+.pickrow:last-child { border-bottom: 0; }
+.pickrow.dis { opacity: .5; }
+.pickrow input { width: 16px; height: 16px; accent-color: var(--accent); }
+.formgrid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 200px), 1fr)); gap: 10px; }
+.grid-in td { padding: 6px 8px; }
+.grid-in input { padding: 5px 8px; }
+tr.err td { background: var(--bad-soft); }
+tr.warn td { background: var(--warn-soft); }
+.msg-err { color: var(--bad); font-size: 12.5px; font-weight: 500; white-space: nowrap; }
+.msg-warn { color: var(--warn); font-size: 12.5px; font-weight: 500; white-space: nowrap; }
+.msg-ok { color: var(--good); font-size: 12.5px; font-weight: 500; }
+.sumbar { display: flex; gap: 16px; flex-wrap: wrap; align-items: center; padding: 10px 12px; background: var(--surface-2); border-radius: 8px; font-size: 13px; }
+.push { border: 1px solid var(--line); border-radius: 8px; padding: 12px; display: grid; gap: 8px; }
+.push p { margin: 0; font-size: 13.5px; }
+
+/* phone */
+.phone { max-width: 400px; width: 100%; margin: 0 auto; background: var(--surface); border: 1px solid var(--line-2); border-radius: 30px; overflow: hidden; box-shadow: var(--shadow); min-height: 680px; display: flex; flex-direction: column; }
+.ph-top { padding: 16px 18px 12px; border-bottom: 1px solid var(--line); display: grid; gap: 8px; }
+.ph-body { padding: 14px 16px 20px; display: grid; gap: 12px; align-content: start; flex: 1; }
+.net { display: flex; align-items: center; justify-content: space-between; gap: 8px; font-size: 12.5px; }
+.toggle { display: inline-flex; align-items: center; gap: 8px; border: 1px solid var(--line-2); background: var(--surface); border-radius: 99px; padding: 3px 10px 3px 4px; font-size: 12.5px; }
+.toggle i { width: 26px; height: 16px; border-radius: 99px; background: var(--good); position: relative; }
+.toggle i::after { content: ""; position: absolute; top: 2px; left: 12px; width: 12px; height: 12px; border-radius: 50%; background: var(--surface); transition: left .15s; }
+.toggle.off i { background: var(--ink-3); }
+.toggle.off i::after { left: 2px; }
+.sync { font-size: 12px; font-weight: 600; color: var(--warn); }
+.campcard { border: 1px solid var(--line); border-radius: 14px; padding: 14px; display: grid; gap: 6px; text-align: left; background: var(--surface); width: 100%; }
+.campcard:hover { border-color: var(--accent-mid); }
+.rrow { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: 11px 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); width: 100%; text-align: left; }
+.rrow:hover { border-color: var(--accent-mid); }
+.q { font-size: 11px; color: var(--warn); font-weight: 600; }
+.sheet { border: 1px solid var(--line); border-radius: 14px; padding: 14px; display: grid; gap: 10px; }
+.sheet.lock { opacity: .5; pointer-events: none; }
+.doctiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.doctile { border: 1.5px dashed var(--line-2); border-radius: 12px; padding: 12px 6px; display: grid; gap: 6px; justify-items: center; text-align: center; background: var(--surface); font-size: 12px; color: var(--ink-2); min-height: 92px; align-content: center; }
+.doctile svg { width: 24px; height: 24px; }
+.doctile.ok { border-style: solid; border-color: var(--good); background: var(--good-soft); color: var(--good); font-weight: 600; }
+.big { width: 100%; justify-content: center; padding: 11px 14px; border-radius: 10px; }
+.exrow { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.exrow .btn { justify-content: center; padding-inline: 6px; font-size: 12.5px; white-space: normal; text-align: center; }
+
+/* back-office */
+.bo { display: grid; grid-template-columns: minmax(0, 360px) minmax(0, 1fr); gap: 18px; align-items: start; }
+@media (max-width: 820px) { .bo { grid-template-columns: 1fr; } }
+.qlist { display: grid; gap: 6px; max-height: 560px; overflow-y: auto; padding: 2px; }
+.qitem { display: grid; gap: 2px; text-align: left; padding: 10px 12px; border: 1px solid var(--line); border-radius: 8px; background: var(--surface); width: 100%; }
+.qitem:hover { border-color: var(--accent-mid); }
+.qitem.on { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+.docs { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 140px), 1fr)); gap: 10px; }
+.doc { border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
+.doc .img { aspect-ratio: 1.58; max-width: 100%; background: repeating-linear-gradient(135deg, var(--surface-2) 0 10px, var(--bg) 10px 20px); display: grid; place-items: center; color: var(--ink-3); font-size: 11.5px; font-family: var(--mono); }
+.doc .cap { padding: 6px 10px; font-size: 12.5px; }
+.kv { display: grid; grid-template-columns: 140px 1fr; gap: 6px 12px; font-size: 13.5px; }
+.kv dt { color: var(--ink-2); }
+.kv dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+.drop { border: 1.5px dashed var(--accent-mid); border-radius: 10px; padding: 18px; display: grid; gap: 8px; justify-items: center; text-align: center; background: var(--accent-soft); }
+.spin { width: 18px; height: 18px; border: 2px solid var(--accent-mid); border-top-color: var(--accent); border-radius: 50%; animation: rot .8s linear infinite; }
+@keyframes rot { to { transform: rotate(360deg); } }
+.ok { color: var(--good); font-weight: 600; }
+.empty { padding: 28px 16px; text-align: center; color: var(--ink-2); display: grid; gap: 6px; justify-items: center; }
+
+/* modal + receipt */
+#modal { position: fixed; inset: 0; z-index: 50; background: rgba(12, 10, 30, .55); display: grid; place-items: center; padding: max(16px, env(safe-area-inset-top, 0px)) max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px)); overflow-y: auto; }
+.mbox { background: var(--surface); border-radius: 14px; width: min(560px, 100%); padding: 18px; display: grid; gap: 14px; box-shadow: var(--shadow); }
+.receipt { position: relative; border: 1px solid var(--line-2); border-radius: 6px; padding: 18px; background: var(--bg); overflow: hidden; }
+.receipt .rh { text-align: center; border-bottom: 2px solid var(--ink); padding-bottom: 10px; margin-bottom: 12px; }
+.receipt .rh .t { font-family: var(--display); font-size: 18px; font-weight: 700; letter-spacing: .02em; text-transform: uppercase; }
+.receipt dl { display: grid; grid-template-columns: 150px 1fr; gap: 6px 12px; margin: 0; font-size: 13px; }
+.receipt dt { color: var(--ink-2); }
+.receipt dd { margin: 0; font-weight: 500; overflow-wrap: anywhere; }
+.stamp { position: absolute; right: 18px; bottom: 16px; transform: rotate(-12deg); border: 3px double var(--accent); color: var(--accent); border-radius: 10px; padding: 6px 12px; font-family: var(--mono); font-weight: 500; font-size: 12px; text-align: center; line-height: 1.3; letter-spacing: .08em; opacity: .85; }
+.wm { position: absolute; inset: 0; display: grid; place-items: center; font-family: var(--display); font-size: 72px; font-weight: 700; color: var(--ink); opacity: .05; transform: rotate(-20deg); pointer-events: none; }
+#toasts { position: fixed; right: max(16px, env(safe-area-inset-right, 0px)); bottom: max(16px, env(safe-area-inset-bottom, 0px)); z-index: 60; display: grid; gap: 8px; max-width: min(380px, calc(100vw - 32px)); }
+.toast { background: var(--ink); color: var(--bg); padding: 10px 14px; border-radius: 10px; font-size: 13.5px; box-shadow: var(--shadow); }
+@media (max-width: 640px) {
+  .roles { margin-left: 0; }
+  .client { display: none; }
+  h1 { font-size: 22px; }
+  .frow { grid-template-columns: 1fr; gap: 4px; }
+  .cityrow { grid-template-columns: 1fr auto; }
+  .cityrow .track { grid-column: 1 / -1; grid-row: 2; }
+  .phone { border-radius: 18px; min-height: 0; }
+  .kv, .receipt dl { grid-template-columns: 1fr; gap: 0 0; }
+  .kv dd, .receipt dd { margin-bottom: 8px; }
+}
+</style>
+</head>
+<body>
+
+<div id="app"></div>
+<div id="toasts" aria-live="polite"></div>
+<div id="modal" hidden></div>
+
+<script>
+const TODAY = '2026-10-28';
+const MON = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+const WD = ['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+function rng(seed) { return () => { seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
+const R = rng(20261028);
+const pick = a => a[Math.floor(R() * a.length)];
+const int = (a, b) => a + Math.floor(R() * (b - a + 1));
+const addDays = (d, n) => { const t = new Date(d + 'T00:00:00Z'); t.setUTCDate(t.getUTCDate() + n); return t.toISOString().slice(0, 10); };
+const fmt = d => d ? `${+d.slice(8)} ${MON[+d.slice(5, 7) - 1]}` : '—';
+const fmtLong = d => `${WD[new Date(d + 'T00:00:00Z').getUTCDay()]}, ${fmt(d)}`;
+const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const maskPhone = p => p ? p.slice(0, 2) + '••••••' + p.slice(-2) : '—';
+const fmtPhone = p => p.length === 10 ? p.slice(0, 5) + ' ' + p.slice(5) : p;
+const pct = x => Math.round(x * 100) + '%';
+const inr = n => '₹' + n.toLocaleString('en-IN');
+const now = () => { const d = new Date(); return String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0'); };
+
+const FIRST = ['Rahul','Amit','Sachin','Vikram','Suresh','Ganesh','Rohit','Imran','Arjun','Deepak','Sanjay','Nitin','Akash','Prakash','Mahesh','Salim','Ravi','Ajay','Kiran','Sagar','Tushar','Yogesh','Pravin','Aniket','Faisal','Manoj','Santosh','Vishal','Omkar','Swapnil','Harish','Ramesh','Ashok','Dinesh','Sunil','Abhishek','Pooja','Sneha','Priya','Anjali','Naveen','Manjunath'];
+const LAST = ['Patil','Shinde','Jadhav','Pawar','More','Kale','Gaikwad','Sawant','Khan','Shaikh','Yadav','Gupta','Singh','Chavan','Deshmukh','Kulkarni','Bhosale','Salunkhe','Mane','Pandey','Mishra','Ansari','Naik','Kadam','Rathod','Gowda','Reddy','Kumar'];
+const CAPTAINS = ['Rakesh Tiwari','Sunita Rao','Mohsin Qureshi','Vinod Kamble','Hemant Joshi','Farah Sayed','Prashant Nair','Kavita Mhatre','Anil Dsouza','Ritesh Pal','Lakshmi Iyer','Sameer Bhat','Gautam Shetty','Divya Hegde'];
+
+// [id, name, city, state, address, lat, lng, phase, policeFlagged]
+const STORE_DEFS = [
+  ['s1','QB Andheri West','Mumbai','Maharashtra','Veera Desai Rd, Andheri West, Mumbai 400053',19.1364,72.8296,'done',true],
+  ['s2','QB Powai','Mumbai','Maharashtra','Hiranandani Gardens, Powai, Mumbai 400076',19.1176,72.9060,'bo',false],
+  ['s3','QB Bandra','Mumbai','Maharashtra','Hill Rd, Bandra West, Mumbai 400050',19.0596,72.8295,'done',false],
+  ['s4','QB Malad','Mumbai','Maharashtra','Link Rd, Malad West, Mumbai 400064',19.1874,72.8484,'ground',true],
+  ['s5','QB Chembur','Mumbai','Maharashtra','Sion-Trombay Rd, Chembur, Mumbai 400071',19.0522,72.9005,'today',true],
+  ['s6','QB Kothrud','Pune','Maharashtra','Paud Rd, Kothrud, Pune 411038',18.5074,73.8077,'done',false],
+  ['s7','QB Baner','Pune','Maharashtra','Baner Rd, Baner, Pune 411045',18.5590,73.7868,'bo',false],
+  ['s8','QB Viman Nagar','Pune','Maharashtra','Nagar Rd, Viman Nagar, Pune 411014',18.5679,73.9143,'future',false],
+  ['s9','QB Thane West','Thane','Maharashtra','Gokhale Rd, Naupada, Thane West 400602',19.1950,72.9690,'ground',true],
+  ['s10','QB Ghodbunder','Thane','Maharashtra','Kasarvadavali, Ghodbunder Rd, Thane 400615',19.2620,72.9690,'future',false],
+  ['s11','QB Vashi','Navi Mumbai','Maharashtra','Sector 17, Vashi, Navi Mumbai 400703',19.0771,72.9986,'bo',false],
+  ['s12','QB Kharghar','Navi Mumbai','Maharashtra','Sector 12, Kharghar, Navi Mumbai 410210',19.0473,73.0699,'today',true],
+  ['s13','QB Koramangala','Bengaluru','Karnataka','80 Feet Rd, Koramangala, Bengaluru 560034',12.9352,77.6245,'req',false],
+  ['s14','QB HSR Layout','Bengaluru','Karnataka','27th Main, HSR Layout, Bengaluru 560102',12.9116,77.6474,'req',false],
+];
+const stores = [];
+const riders = [];
+const LOG = [];
+let rid = 0;
+const code = s => s.state === 'Karnataka' ? 'KA' : 'MH';
+function mkRider(s, status, campDate) {
+  rid++;
+  const r = { id: 'r' + rid, name: pick(FIRST) + ' ' + pick(LAST), phone: '90000' + int(10000, 99999), storeId: s.id, status,
+    portalId: null, pwd: null, docs: { age: false, id: false, addr: false }, challan: null, updated: campDate || addDays(TODAY, -int(2, 6)), walkin: false };
+  if (['account','captured','uploaded','challan','docsmissing'].includes(status)) { r.portalId = code(s) + 'PCC' + int(100000, 999999); r.pwd = 'Qb#' + int(1000, 9999); }
+  if (['captured','uploaded','challan'].includes(status)) r.docs = { age: true, id: true, addr: true };
+  if (status === 'account') r.docs = { age: R() < .5, id: true, addr: false };
+  if (status === 'uploaded') r.updated = addDays(campDate, int(1, 3)) > TODAY ? TODAY : addDays(campDate, int(1, 3));
+  if (status === 'challan') {
+    let d = addDays(campDate, int(2, 9)); if (d > TODAY) d = TODAY;
+    r.challan = { no: `PCC-${code(s)}-${d.slice(2, 4)}${d.slice(5, 7)}-${int(10000, 99999)}`, date: d, amount: 159, txn: 'TXN' + int(10000000, 99999999) };
+    r.updated = d;
+  }
+  return r;
+}
+function log(storeId, who, text, d = TODAY, t = now()) { LOG.unshift({ storeId, who, text, d, t }); }
+
+STORE_DEFS.forEach(([id, name, city, state, address, lat, lng, phase, flagged], i) => {
+  const s = { id, name, city, state, address, lat, lng, flagged, captain: CAPTAINS[i], captainPhone: '90000' + int(10000, 99999),
+    campDate: null, campDone: false, proposedDate: null, slot: 'Morning (10 am – 1 pm)' };
+  const n = int(16, 28);
+  const off = { done: -int(22, 32), bo: -int(6, 10), ground: -int(1, 3), today: 0 }[phase];
+  if (off !== undefined) s.campDate = addDays(TODAY, off);
+  if (phase === 'future') s.campDate = addDays(TODAY, id === 's8' ? 3 : 5);
+  if (phase === 'req') s.proposedDate = addDays(TODAY, id === 's13' ? 6 : 8);
+  if (['done','bo','ground'].includes(phase)) s.campDone = true;
+  stores.push(s);
+  for (let k = 0; k < n; k++) {
+    const p = R(); let st = 'requested';
+    if (phase === 'done') st = p < .84 ? 'challan' : p < .92 ? 'noshow' : p < .96 ? 'haspcc' : 'docsmissing';
+    if (phase === 'bo') st = p < .42 ? 'challan' : p < .64 ? 'uploaded' : p < .78 ? 'captured' : p < .84 ? 'account' : p < .92 ? 'noshow' : 'haspcc';
+    if (phase === 'ground') st = p < .68 ? 'captured' : p < .80 ? 'account' : p < .92 ? 'noshow' : 'docsmissing';
+    if (phase === 'today' && id === 's5' && k < 6) st = k < 4 ? 'captured' : 'account';
+    riders.push(mkRider(s, st, s.campDate));
+  }
+  const rs = riders.filter(r => r.storeId === id);
+  const reqDay = addDays(s.campDate || TODAY, -int(5, 9));
+  log(id, 'Neha (Business Ops)', `Drive requested for ${rs.length} riders`, reqDay, '11:20');
+  if (s.campDate) log(id, 'ClearPass ops', `Camp confirmed for ${fmtLong(s.campDate)}`, addDays(reqDay, 1), '15:05');
+  if (s.campDone) log(id, 'Imran (Field agent)', `Camp closed: ${rs.filter(r => !['requested','noshow'].includes(r.status)).length} of ${rs.length} riders attended`, s.campDate, '17:40');
+  const ch = rs.filter(r => r.challan).length;
+  if (ch) log(id, 'Asha (Back-office)', `${ch} challans attached`, rs.filter(r => r.challan).map(r => r.challan.date).sort().at(-1), '18:10');
+  if (phase === 'today' && id === 's5') log(id, 'Imran (Field agent)', 'Camp started, 6 riders checked in', TODAY, '10:12');
+});
+LOG.sort((a, b) => (b.d + b.t).localeCompare(a.d + a.t));
+
+const S = {
+  role: 'leader', lState: 'all',
+  opsTab: 'stores', storeId: null, fCity: 'all', fStatus: 'all', q: '', rFilter: 'all', addRider: null, resched: null,
+  bMonth: '2026-10', rate: 250, csv: false, cq: '',
+  wiz: null,
+  agentStoreId: null, agentRiderId: null, offline: false, queue: [], rq: '', rTab: 'todo', walkin: null, pid: {},
+  boTab: 'upload', boId: null, revealed: {}, ocr: null, tray: [], bulk: null,
+};
+const USERS = { leader: 'Arjun · Leadership', ops: 'Neha · Business Ops', agent: 'Imran · Field agent', bo: 'Asha · Back-office' };
+const HASH = { leader: 'leadership', ops: 'ops', agent: 'agent', bo: 'backoffice' };
+
+const storeRiders = id => riders.filter(r => r.storeId === id);
+const storeById = id => stores.find(s => s.id === id);
+function metrics(rs) {
+  const c = k => rs.filter(r => r.status === k).length;
+  const m = { n: rs.length, requested: c('requested'), account: c('account'), captured: c('captured'), uploaded: c('uploaded'), challan: c('challan'), noshow: c('noshow'), docsmissing: c('docsmissing'), haspcc: c('haspcc') };
+  m.attended = m.account + m.captured + m.uploaded + m.challan;
+  m.pendingUpload = m.account + m.captured;
+  m.exceptions = m.noshow + m.docsmissing + m.haspcc;
+  m.coverage = m.n ? (m.challan + m.haspcc) / m.n : 0;
+  return m;
+}
+function campStatus(s) {
+  if (!s.campDate) return 'requested';
+  if (!s.campDone) return 'scheduled';
+  const rs = storeRiders(s.id);
+  const active = rs.some(r => ['account','captured','uploaded','requested'].includes(r.status));
+  if (!active) return 'completed';
+  return rs.some(r => ['uploaded','challan'].includes(r.status)) ? 'backoffice' : 'ground';
+}
+const CAMP = { requested: ['Requested','p-req'], scheduled: ['Scheduled','p-sch'], ground: ['On-ground done','p-grd'], backoffice: ['Back-office processing','p-bo'], completed: ['Completed','p-done'] };
+const CAMP_ORDER = ['requested','scheduled','ground','backoffice','completed'];
+function campPill(s) {
+  const k = campStatus(s);
+  if (k === 'scheduled' && s.campDate === TODAY) return `<span class="pill p-live"><i class="dot"></i>Camp today</span>`;
+  return `<span class="pill ${CAMP[k][1]}">${CAMP[k][0]}</span>`;
+}
+const RST = { requested: ['Not started','c-req'], account: ['Account created','c-acc'], captured: ['Docs captured','c-acc'], uploaded: ['Uploaded · fee paid','c-up'], challan: ['Challan generated','c-ch'], noshow: ['No-show','c-ex'], docsmissing: ['Docs missing','c-ex'], haspcc: ['Already has PCC','c-ok'] };
+const chip = st => `<span class="chip ${RST[st][1]}">${RST[st][0]}</span>`;
+function funnelBar(m) {
+  const seg = (v, c, t) => v ? `<span class="seg ${c}" style="flex:${v}" title="${t}: ${v}"></span>` : '';
+  return `<div class="fbar" role="img" aria-label="${m.challan} challans, ${m.uploaded} uploaded, ${m.pendingUpload} pending upload, ${m.requested} not started, ${m.exceptions} exceptions">${seg(m.challan,'sg-ch','Challan generated')}${seg(m.uploaded,'sg-up','Uploaded, awaiting challan')}${seg(m.pendingUpload,'sg-pe','Attended, pending upload')}${seg(m.requested,'sg-no','Not started')}${seg(m.exceptions,'sg-ex','Exceptions')}</div>`;
+}
+const LEGEND = `<div class="legend"><span><i class="sg-ch"></i>Challan generated</span><span><i class="sg-up"></i>Uploaded, awaiting challan</span><span><i class="sg-pe"></i>Attended, pending upload</span><span><i class="sg-no"></i>Not started</span><span><i class="sg-ex"></i>Exception</span></div>`;
+const STAMP_SVG = `<svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="14" fill="none" stroke="currentColor" stroke-width="2"/><circle cx="16" cy="16" r="10.5" fill="none" stroke="currentColor" stroke-width="1" stroke-dasharray="2 2"/><path d="M11 16.5l3.3 3.3L21.5 12.5" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>`;
+const ICON_CAM = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path d="M4 8h3l2-2.5h6L17 8h3v11H4z"/><circle cx="12" cy="13.5" r="3.5"/></svg>`;
+const ICON_OK = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>`;
+
+// ---------- shell ----------
+function render() {
+  const a = document.activeElement, fid = a && a.id; let s0 = null, s1 = null;
+  try { s0 = a.selectionStart; s1 = a.selectionEnd; } catch (e) {}
+  const view = { leader: viewLeader, ops: viewOps, agent: viewAgent, bo: viewBO }[S.role]();
+  document.getElementById('app').innerHTML = `
+  <header class="top"><div class="wrap top-in">
+    <div class="brand">${STAMP_SVG}<span class="wordmark">ClearPass</span><span class="client">QuickBasket · PCC compliance</span></div>
+    <nav class="roles" aria-label="Switch view">
+      <span class="rgroup">Client portal</span>
+      ${roleBtn('leader','Leadership')}${roleBtn('ops','Business Ops')}
+      <span class="rgroup">Agency tools</span>
+      ${roleBtn('agent','Field agent')}${roleBtn('bo','Back-office')}
+    </nav>
+  </div></header>
+  <div class="wrap proto"><b>Prototype</b> · sample data for a fictional client, QuickBasket. Signed in as ${USERS[S.role]}. Actions in the agency tools update the client views live.</div>
+  <main class="wrap main">${view}</main>`;
+  if (fid) { const el = document.getElementById(fid); if (el) { el.focus(); try { if (s0 != null) el.setSelectionRange(s0, s1); } catch (e) {} } }
+}
+const roleBtn = (k, l) => `<button data-act="role" data-v="${k}" class="${S.role === k ? 'on' : ''}" aria-pressed="${S.role === k}">${l}</button>`;
+function toast(msg) {
+  const el = document.createElement('div'); el.className = 'toast'; el.textContent = msg;
+  document.getElementById('toasts').appendChild(el); setTimeout(() => el.remove(), 3200);
+}
+
+// ---------- leadership ----------
+function viewLeader() {
+  const ss = stores.filter(s => S.lState === 'all' || s.state === S.lState);
+  const ids = new Set(ss.map(s => s.id));
+  const rs = riders.filter(r => ids.has(r.storeId));
+  const m = metrics(rs);
+  const states = [...new Set(stores.map(s => s.state))];
+  const cities = [...new Set(ss.map(s => s.city))].map(c => {
+    const cs = ss.filter(s => s.city === c); const cids = new Set(cs.map(s => s.id));
+    return { city: c, state: cs[0].state, stores: cs.length, m: metrics(rs.filter(r => cids.has(r.storeId))) };
+  });
+  const byState = states.filter(st => cities.some(c => c.state === st)).map(st => ({ st, cities: cities.filter(c => c.state === st).sort((a, b) => b.m.coverage - a.m.coverage) }));
+  const weeks = [0,1,2,3,4,5].map(i => { const end = addDays(TODAY, -7 * (5 - i)), start = addDays(end, -6); return { start, end, v: rs.filter(r => r.challan && r.challan.date >= start && r.challan.date <= end).length }; });
+  const risk = ss.map(s => ({ s, m: metrics(storeRiders(s.id)) })).filter(x => x.s.flagged && x.m.coverage < .8).sort((a, b) => a.m.coverage - b.m.coverage).slice(0, 5);
+  const uploadedPlus = m.uploaded + m.challan;
+  const frow = (label, v, prev, last) => `<div class="frow"><div><div>${label}</div>${prev != null ? `<div class="faint small">${prev ? pct(v / prev) : '0%'} of previous step</div>` : ''}</div><div><div class="fb ${last ? 'last' : ''}" style="width:${m.n ? Math.max(6, v / m.n * 100) : 6}%">${v}</div></div></div>`;
+  return `
+  <div class="head"><div><h1>Compliance overview</h1><p>PCC coverage across your dark stores as of ${fmtLong(TODAY)} 2026. A copy of this page goes to leadership every Monday at 9 am.</p></div>
+    <div class="field" style="min-width:180px"><label for="l-state">State</label><select id="l-state" data-in="lState"><option value="all">All states</option>${states.map(st => `<option ${S.lState === st ? 'selected' : ''}>${st}</option>`).join('')}</select></div></div>
+  <section class="kpis" aria-label="Key numbers">
+    <div class="kpi"><span class="label">Riders requested</span><span class="v">${m.n}</span><span class="muted small">${ss.length} stores · ${cities.length} cities</span></div>
+    <div class="kpi"><span class="label">Initiated</span><span class="v">${m.attended}</span><span class="muted small">${pct(m.n ? m.attended / m.n : 0)} attended a camp (OTP verified)</span></div>
+    <div class="kpi"><span class="label">Completed</span><span class="v">${m.challan}</span><span class="muted small">challans generated</span></div>
+    <div class="kpi hero"><span class="label">Compliance coverage</span><span class="v">${pct(m.coverage)}</span><span class="muted small">riders with a challan or an existing PCC</span><div class="meter"><i style="width:${m.coverage * 100}%"></i></div></div>
+  </section>
+  <div class="grid2">
+    <section class="card"><div class="ch"><h2>Coverage by city</h2><span class="faint small">Click a city to see its stores</span></div>
+      ${byState.map(g => `<div class="stgroup label">${g.st}</div>${g.cities.map(c => `
+        <button class="cityrow" data-act="toCity" data-v="${esc(c.city)}"><span><b>${c.city}</b><br><span class="faint small">${c.stores} stores · ${c.m.n} riders</span></span>
+        <span class="track" aria-hidden="true"><i style="width:${c.m.coverage * 100}%"></i></span><span class="num"><b>${pct(c.m.coverage)}</b></span></button>`).join('')}`).join('')}
+    </section>
+    <section class="card"><h2>Rider funnel</h2>
+      <div class="funnel">
+        ${frow('Riders requested', m.n, null)}
+        ${frow('Attended camp (OTP verified)', m.attended, m.n)}
+        ${frow('Docs uploaded, fee paid', uploadedPlus, m.attended)}
+        ${frow('Challan generated', m.challan, uploadedPlus, true)}
+      </div>
+      <p class="muted small" style="margin:14px 0 0">Exceptions: ${m.noshow} no-shows, ${m.docsmissing} missing documents, ${m.haspcc} already held a PCC (counted as covered).</p>
+    </section>
+  </div>
+  <div class="grid2">
+    <section class="card"><div class="ch"><h2>Challans generated per week</h2><span class="faint small">Week ending</span></div>${weekChart(weeks)}</section>
+    <section class="card"><div class="ch"><h2>Stores needing attention</h2><span class="faint small">Police-flagged, under 80% coverage</span></div>
+      <div class="risk">${risk.length ? risk.map(x => `
+        <button class="riskrow" data-act="openStoreOps" data-id="${x.s.id}"><span><b>${x.s.name}</b> <span class="flag">Police flagged</span><br><span class="muted small">${x.s.city} · ${CAMP[campStatus(x.s)][0]}${x.s.campDate && !x.s.campDone ? ' ' + fmt(x.s.campDate) : ''} · ${x.m.requested ? x.m.requested + ' not started' : x.m.pendingUpload + x.m.uploaded + ' in processing'}</span></span><span class="cov">${pct(x.m.coverage)}</span></button>`).join('') : `<div class="empty">Every police-flagged store is above 80% coverage.</div>`}
+      </div></section>
+  </div>`;
+}
+function weekChart(weeks) {
+  const W = 420, H = 190, x0 = 30, x1 = W - 10, y0 = 22, y1 = 150;
+  const max = Math.max(10, Math.ceil(Math.max(...weeks.map(w => w.v)) / 10) * 10);
+  const bw = (x1 - x0) / weeks.length;
+  const Y = v => y1 - v / max * (y1 - y0);
+  const ticks = [0, max / 2, max];
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Challans generated per week: ${weeks.map(w => fmt(w.end) + ' ' + w.v).join(', ')}" style="width:100%;height:auto">
+    ${ticks.map(t => `<line class="grid" x1="${x0}" x2="${x1}" y1="${Y(t)}" y2="${Y(t)}"/><text x="${x0 - 6}" y="${Y(t) + 4}" text-anchor="end">${t}</text>`).join('')}
+    ${weeks.map((w, i) => { const x = x0 + i * bw + bw * .18, wd = bw * .64, last = i === weeks.length - 1;
+      return `<rect class="bar ${last ? 'now' : ''}" x="${x}" y="${Y(w.v)}" width="${wd}" height="${Math.max(0, y1 - Y(w.v))}" rx="3"/>
+      <text class="val" x="${x + wd / 2}" y="${Y(w.v) - 6}" text-anchor="middle">${w.v}</text>
+      <text x="${x + wd / 2}" y="${y1 + 18}" text-anchor="middle">${fmt(w.end)}</text>${last ? `<text x="${x + wd / 2}" y="${y1 + 33}" text-anchor="middle">this week</text>` : ''}`; }).join('')}
+  </svg>`;
+}
+
+// ---------- business ops ----------
+function viewOps() {
+  if (S.storeId) return viewStore(storeById(S.storeId));
+  const tab = (k, l) => `<button data-act="opsTab" data-v="${k}" class="${S.opsTab === k ? 'on' : ''}">${l}</button>`;
+  const body = S.opsTab === 'stores' ? opsStores() : S.opsTab === 'new' ? viewWizard() : opsBilling();
+  return `<div class="head"><div><h1>${S.opsTab === 'new' ? 'New PCC drive' : S.opsTab === 'billing' ? 'Challans and billing' : 'Drives and stores'}</h1>
+    <p>${S.opsTab === 'new' ? 'Add stores and their active riders, then propose camp dates. Our team confirms each date.' : S.opsTab === 'billing' ? 'Every billable rider has a government challan behind it. Use this to reconcile our invoice.' : 'Camp status and rider progress for every store. Open a store for its rider list and challans.'}</p></div>
+    ${S.opsTab !== 'new' ? `<button class="btn pri" data-act="opsTab" data-v="new">+ New drive</button>` : ''}</div>
+  <nav class="tabs">${tab('stores','Stores')}${tab('new','New drive')}${tab('billing','Challans & billing')}</nav>${body}`;
+}
+function opsStores() {
+  const cities = [...new Set(stores.map(s => s.city))];
+  const list = stores.filter(s => (S.fCity === 'all' || s.city === S.fCity) && (S.fStatus === 'all' || campStatus(s) === S.fStatus) && (!S.q || s.name.toLowerCase().includes(S.q.toLowerCase())));
+  const counts = Object.fromEntries(CAMP_ORDER.map(k => [k, stores.filter(s => (S.fCity === 'all' || s.city === S.fCity) && campStatus(s) === k).length]));
+  return `
+  <div class="btns" style="justify-content:space-between">
+    <div class="chips"><button class="chipf ${S.fStatus === 'all' ? 'on' : ''}" data-act="fStatus" data-v="all">All</button>${CAMP_ORDER.map(k => `<button class="chipf ${S.fStatus === k ? 'on' : ''}" data-act="fStatus" data-v="${k}">${CAMP[k][0]} <span class="faint">${counts[k]}</span></button>`).join('')}</div>
+    <div class="btns"><select id="f-city" data-in="fCity" aria-label="City" style="width:auto"><option value="all">All cities</option>${cities.map(c => `<option ${S.fCity === c ? 'selected' : ''}>${c}</option>`).join('')}</select>
+    <input id="f-q" type="search" data-in="q" placeholder="Search stores" value="${esc(S.q)}" aria-label="Search stores" style="width:180px"></div>
+  </div>
+  ${LEGEND}
+  <div class="tw"><table>
+    <thead><tr><th>Store</th><th>City</th><th>Camp status</th><th>Camp date</th><th>Rider progress</th><th class="r">Riders</th><th class="r">Coverage</th></tr></thead>
+    <tbody>${list.map(s => { const m = metrics(storeRiders(s.id)); return `
+      <tr class="click" data-act="openStore" data-id="${s.id}" tabindex="0"><td><b>${s.name}</b>${s.flagged ? ' <span class="flag">Police flagged</span>' : ''}</td><td>${s.city}</td><td>${campPill(s)}</td>
+      <td class="num">${s.campDate ? fmt(s.campDate) : s.proposedDate ? `<span class="faint">Proposed ${fmt(s.proposedDate)}</span>` : '—'}</td>
+      <td>${funnelBar(m)}</td><td class="r num">${m.n}</td><td class="r num"><b>${pct(m.coverage)}</b></td></tr>`; }).join('') || `<tr><td colspan="7"><div class="empty">No stores match these filters.</div></td></tr>`}</tbody>
+  </table></div>`;
+}
+function viewStore(s) {
+  const rs = storeRiders(s.id); const m = metrics(rs); const k = campStatus(s); const ci = CAMP_ORDER.indexOf(k);
+  const groups = { all: () => true, todo: r => r.status === 'requested', prog: r => ['account','captured','uploaded'].includes(r.status), challan: r => r.status === 'challan', exc: r => ['noshow','docsmissing','haspcc'].includes(r.status) };
+  const shown = rs.filter(groups[S.rFilter]);
+  const fchip = (v, l, n) => `<button class="chipf ${S.rFilter === v ? 'on' : ''}" data-act="rFilter" data-v="${v}">${l} <span class="faint">${n}</span></button>`;
+  const logs = LOG.filter(l => l.storeId === s.id).slice(0, 8);
+  return `
+  <div><button class="back" data-act="closeStore">‹ All stores</button></div>
+  <div class="head"><div><h1>${s.name}</h1><p>${s.city}, ${s.state} ${s.flagged ? '<span class="flag">Police flagged</span>' : ''}</p></div>
+    <div class="btns"><button class="btn" data-act="zip" data-id="${s.id}" ${m.challan ? '' : 'disabled'}>Download ${m.challan} challans (ZIP)</button>
+    <button class="btn" data-act="resched">Request reschedule</button><button class="btn pri" data-act="addRiderOpen">+ Add rider</button></div></div>
+  ${S.resched ? `<div class="card btns"><div class="field"><label for="rs-date">New preferred date</label><input id="rs-date" type="date" min="${addDays(TODAY, 2)}" value="${S.resched}" data-in="resched"></div><button class="btn pri" data-act="reschedSend" style="align-self:end">Send to agency</button><button class="btn ghost" data-act="reschedCancel" style="align-self:end">Cancel</button></div>` : ''}
+  ${S.addRider ? `<div class="card"><div class="formgrid"><div class="field"><label for="ar-n">Rider name</label><input id="ar-n" type="text" data-in="arName" value="${esc(S.addRider.name)}"></div><div class="field"><label for="ar-p">Phone</label><input id="ar-p" type="tel" data-in="arPhone" value="${esc(S.addRider.phone)}" placeholder="10-digit mobile"></div>
+    <div class="btns" style="align-self:end"><button class="btn pri" data-act="addRiderSave">Add to roster</button><button class="btn ghost" data-act="addRiderCancel">Cancel</button></div></div></div>` : ''}
+  <section class="card"><div class="steps">${CAMP_ORDER.map((c, i) => `<div class="step ${i < ci || k === 'completed' ? 'done' : i === ci ? 'cur' : ''}"><div class="bar"></div><span class="t">${CAMP[c][0]}</span></div>`).join('')}</div>
+    <div class="meta" style="margin-top:12px">
+      <div><div class="label">Address</div>${s.address}<br><a href="https://www.google.com/maps?q=${s.lat},${s.lng}" target="_blank" rel="noopener" class="mono">${s.lat.toFixed(4)}, ${s.lng.toFixed(4)}</a></div>
+      <div><div class="label">Store captain</div>${s.captain}<br><span class="mono">${fmtPhone(s.captainPhone)}</span></div>
+      <div><div class="label">Camp</div>${s.campDate ? fmtLong(s.campDate) + '<br><span class="muted small">' + s.slot + '</span>' : s.proposedDate ? `Proposed ${fmtLong(s.proposedDate)}<br><span class="muted small">Waiting for agency confirmation</span>` : 'Not scheduled'}${s.campDate && s.proposedDate ? `<br><span class="muted small">Reschedule to ${fmt(s.proposedDate)} requested</span>` : ''}</div>
+    </div></section>
+  <div class="stats">
+    <div class="stat"><div class="label">Total roster</div><div class="v">${m.n}</div></div>
+    <div class="stat"><div class="label">Attended (OTP verified)</div><div class="v">${m.attended}</div></div>
+    <div class="stat"><div class="label">Pending upload</div><div class="v">${m.pendingUpload + m.uploaded}</div></div>
+    <div class="stat"><div class="label">Challan generated</div><div class="v" style="color:var(--good)">${m.challan}</div></div>
+    <div class="stat"><div class="label">Coverage</div><div class="v">${pct(m.coverage)}</div></div>
+  </div>
+  <section style="display:grid;gap:10px">
+    <div class="chips">${fchip('all','All',rs.length)}${fchip('todo','Not started',m.requested)}${fchip('prog','In progress',m.pendingUpload + m.uploaded)}${fchip('challan','Challan generated',m.challan)}${fchip('exc','Exceptions',m.exceptions)}</div>
+    <div class="tw"><table><thead><tr><th>Rider</th><th>Phone</th><th>Status</th><th>Portal ID</th><th>Updated</th><th>Challan</th></tr></thead>
+    <tbody>${shown.map(r => `<tr><td>${esc(r.name)}${r.walkin ? ' <span class="faint small">walk-in</span>' : ''}</td><td class="mono">${maskPhone(r.phone)}</td><td>${chip(r.status)}</td><td class="mono">${r.portalId || '—'}</td><td class="num">${fmt(r.updated)}</td>
+      <td>${r.challan ? `<button class="btn sm" data-act="viewChallan" data-id="${r.id}">View</button>` : '<span class="faint">—</span>'}</td></tr>`).join('') || `<tr><td colspan="6"><div class="empty">No riders in this group.</div></td></tr>`}</tbody></table></div>
+  </section>
+  <section class="card"><h2>Activity</h2><div class="log">${logs.map(l => `<div><span class="faint small num">${fmt(l.d)} ${l.t}</span><span>${esc(l.text)} <span class="faint">· ${l.who}</span></span></div>`).join('')}</div></section>`;
+}
+function opsBilling() {
+  const months = [...new Set(riders.filter(r => r.challan).map(r => r.challan.date.slice(0, 7)))].sort().reverse();
+  const inMonth = r => r.challan && (S.bMonth === 'all' || r.challan.date.startsWith(S.bMonth));
+  const rows = stores.map(s => ({ s, n: storeRiders(s.id).filter(inMonth).length })).filter(x => x.n);
+  const total = rows.reduce((a, x) => a + x.n, 0);
+  const label = mo => mo === 'all' ? 'All time' : `${MON[+mo.slice(5) - 1]} ${mo.slice(0, 4)}`;
+  const list = riders.filter(inMonth).filter(r => !S.cq || (r.name + r.challan.no + storeById(r.storeId).name).toLowerCase().includes(S.cq.toLowerCase())).sort((a, b) => b.challan.date.localeCompare(a.challan.date));
+  const csv = ['Store,City,Billable riders,Govt fee (INR),Service fee (INR),Total (INR)', ...rows.map(x => `${x.s.name},${x.s.city},${x.n},${x.n * 159},${x.n * S.rate},${x.n * (159 + S.rate)}`), `Total,,${total},${total * 159},${total * S.rate},${total * (159 + S.rate)}`].join('\n');
+  return `
+  <div class="btns">
+    <div class="field"><label for="b-month">Period</label><select id="b-month" data-in="bMonth" style="width:auto">${months.map(mo => `<option value="${mo}" ${S.bMonth === mo ? 'selected' : ''}>${label(mo)}</option>`).join('')}<option value="all" ${S.bMonth === 'all' ? 'selected' : ''}>All time</option></select></div>
+    <div class="field"><label for="b-rate">Service fee per rider (example)</label><input id="b-rate" type="number" min="0" step="10" data-in="rate" value="${S.rate}" style="width:140px"></div>
+    <div class="btns" style="align-self:end;margin-left:auto"><button class="btn" data-act="csv">${S.csv ? 'Hide CSV' : 'Export CSV'}</button><button class="btn" data-act="zipAll" ${total ? '' : 'disabled'}>Download ${total} challans (ZIP)</button></div>
+  </div>
+  ${S.csv ? `<div class="card" style="display:grid;gap:8px"><label for="csv-out" class="small muted">CSV for ${label(S.bMonth)}. Copy it into your sheet or invoice tool.</label><textarea id="csv-out" rows="6" class="mono" readonly>${esc(csv)}</textarea><div><button class="btn sm" data-act="copy" data-target="csv-out">Copy CSV</button></div></div>` : ''}
+  <div class="tw"><table><thead><tr><th>Store</th><th>City</th><th class="r">Billable riders</th><th class="r">Govt fee (₹159 each)</th><th class="r">Service fee</th><th class="r">Total</th></tr></thead>
+    <tbody>${rows.map(x => `<tr><td><b>${x.s.name}</b></td><td>${x.s.city}</td><td class="r num">${x.n}</td><td class="r num">${inr(x.n * 159)}</td><td class="r num">${inr(x.n * S.rate)}</td><td class="r num"><b>${inr(x.n * (159 + S.rate))}</b></td></tr>`).join('')}
+    <tr><td><b>Total</b></td><td></td><td class="r num"><b>${total}</b></td><td class="r num"><b>${inr(total * 159)}</b></td><td class="r num"><b>${inr(total * S.rate)}</b></td><td class="r num"><b>${inr(total * (159 + S.rate))}</b></td></tr></tbody></table></div>
+  <section style="display:grid;gap:10px"><div class="ch"><h2>Challan vault</h2><input id="c-q" type="search" data-in="cq" value="${esc(S.cq)}" placeholder="Search name, store or challan no." aria-label="Search challans" style="width:260px"></div>
+    <div class="tw" style="max-height:420px;overflow-y:auto"><table><thead><tr><th>Challan no.</th><th>Rider</th><th>Store</th><th>Date</th><th class="r">Fee</th><th></th></tr></thead>
+    <tbody>${list.map(r => `<tr><td class="mono">${r.challan.no}</td><td>${esc(r.name)}</td><td>${storeById(r.storeId).name}</td><td class="num">${fmt(r.challan.date)}</td><td class="r num">₹159</td><td class="r"><button class="btn sm" data-act="viewChallan" data-id="${r.id}">View</button></td></tr>`).join('') || `<tr><td colspan="6"><div class="empty">No challans match.</div></td></tr>`}</tbody></table></div></section>`;
+}
+
+// ---------- new drive wizard ----------
+function newWiz() {
+  return { step: 1, sel: [], added: [], rows: [], dates: {}, slots: {}, notes: '', done: null,
+    ns: { name: 'QB Goregaon East', city: 'Mumbai', address: 'Aarey Rd, Goregaon East, Mumbai 400063', gps: '19.1663, 72.8526', captain: 'Rakesh Tiwari', phone: '90000 41872' } };
+}
+const allWizStores = () => [...stores, ...S.wiz.added.filter(s => !stores.includes(s))];
+const selStores = () => allWizStores().filter(s => S.wiz.sel.includes(s.id));
+const canPick = s => ['requested','scheduled','completed'].includes(campStatus(s)) || S.wiz.added.includes(s);
+function validate() {
+  const names = new Map(selStores().map(s => [s.name.toLowerCase(), s]));
+  const seen = new Map();
+  S.wiz.rows.forEach((r, i) => {
+    const p = r.phone.replace(/\D/g, ''); r.err = ''; r.warn = '';
+    if (!r.name.trim()) r.err = 'Name is missing';
+    else if (!/^[6-9]\d{9}$/.test(p)) r.err = 'Phone must be 10 digits';
+    else if (seen.has(p)) r.err = `Duplicate of row ${seen.get(p) + 1}`;
+    else if (!names.has(r.store.trim().toLowerCase())) r.err = 'Store is not in this drive';
+    else if (riders.some(x => x.phone === p && x.status === 'challan')) r.warn = 'Already has a challan, will be skipped';
+    if (/^[6-9]\d{9}$/.test(p) && !seen.has(p)) seen.set(p, i);
+  });
+}
+function viewWizard() {
+  if (!S.wiz) S.wiz = newWiz();
+  const W = S.wiz;
+  if (W.done) return wizDone();
+  const st = (n, l) => `<span class="wstep ${W.step === n ? 'on' : W.step > n ? 'ok' : ''}"><b>${W.step > n ? '✓' : n}</b>${l}</span>`;
+  let body = '';
+  if (W.step === 1) {
+    const list = allWizStores();
+    body = `
+    <section class="card"><div class="ch"><h2>Which stores need a camp?</h2><span class="faint small">${W.sel.length} selected</span></div>
+      <div class="tw" style="max-height:340px;overflow-y:auto">${list.map(s => { const ok = canPick(s); return `
+        <label class="pickrow ${ok ? '' : 'dis'}"><input type="checkbox" id="pk-${s.id}" data-in="pick" data-id="${s.id}" ${W.sel.includes(s.id) ? 'checked' : ''} ${ok ? '' : 'disabled'}>
+        <span style="flex:1;min-width:0"><b>${esc(s.name)}</b> <span class="faint small">${esc(s.city)}</span>${W.added.includes(s) ? ' <span class="chip c-acc">New</span>' : ''}</span>
+        <span class="small muted">${ok ? (W.added.includes(s) ? 'New store' : CAMP[campStatus(s)][0]) : 'Camp in progress'}</span></label>`; }).join('')}</div></section>
+    <section class="card"><h2>Add a store we haven't visited</h2><p class="muted small" style="margin:-6px 0 12px">Pre-filled with an example. Edit it, then add.</p>
+      <div class="formgrid">
+        <div class="field"><label for="ns-name">Store name</label><input id="ns-name" type="text" data-in="ns" data-k="name" value="${esc(W.ns.name)}"></div>
+        <div class="field"><label for="ns-city">City</label><select id="ns-city" data-in="ns" data-k="city">${['Mumbai','Thane','Navi Mumbai','Pune','Nagpur','Bengaluru'].map(c => `<option ${W.ns.city === c ? 'selected' : ''}>${c}</option>`).join('')}</select></div>
+        <div class="field" style="grid-column:1/-1"><label for="ns-addr">Address</label><input id="ns-addr" type="text" data-in="ns" data-k="address" value="${esc(W.ns.address)}"></div>
+        <div class="field"><label for="ns-gps">GPS (lat, long)</label><input id="ns-gps" type="text" data-in="ns" data-k="gps" value="${esc(W.ns.gps)}"></div>
+        <div class="field"><label for="ns-cap">Store captain</label><input id="ns-cap" type="text" data-in="ns" data-k="captain" value="${esc(W.ns.captain)}"></div>
+        <div class="field"><label for="ns-ph">Captain phone</label><input id="ns-ph" type="tel" data-in="ns" data-k="phone" value="${esc(W.ns.phone)}"></div>
+      </div><div class="btns" style="margin-top:12px"><button class="btn" data-act="addStore">Add store</button></div></section>
+    <div class="btns" style="justify-content:flex-end"><button class="btn pri" data-act="wizNext" ${W.sel.length ? '' : 'disabled'}>Next: riders ›</button></div>`;
+  }
+  if (W.step === 2) {
+    validate();
+    const errs = W.rows.filter(r => r.err).length, warns = W.rows.filter(r => r.warn).length, okN = W.rows.length - errs - warns;
+    body = `
+    <section class="card" style="display:grid;gap:12px"><div class="ch"><h2>Upload the active rider roster</h2><span class="faint small">Riders active in the last 7 days</span></div>
+      <div class="btns"><button class="btn" data-act="tmpl">Download template (.xlsx)</button><button class="btn pri" data-act="sample">Use sample file</button><button class="btn ghost" data-act="addRow">+ Add a row by hand</button></div>
+      <p class="muted small" style="margin:0">Template columns: Rider name, Phone, Store. Store names must match the stores in this drive: ${selStores().map(s => '<b>' + esc(s.name) + '</b>').join(', ')}.</p>
+      ${W.rows.length ? `<div class="sumbar"><span><b>${W.rows.length}</b> rows</span><span class="msg-ok">${okN} ready</span>${errs ? `<span class="msg-err">${errs} to fix</span>` : ''}${warns ? `<span class="msg-warn">${warns} will be skipped</span>` : ''}<span class="faint small">Fix errors right in the grid. No need to re-upload.</span></div>
+      <div class="tw"><table class="grid-in"><thead><tr><th>#</th><th>Rider name</th><th>Phone</th><th>Store</th><th>Check</th><th></th></tr></thead><tbody>
+      ${W.rows.map((r, i) => `<tr class="${r.err ? 'err' : r.warn ? 'warn' : ''}"><td class="faint num">${i + 1}</td>
+        <td><input id="wz-n-${i}" type="text" data-in="cell" data-i="${i}" data-k="name" value="${esc(r.name)}" aria-label="Row ${i + 1} name"></td>
+        <td><input id="wz-p-${i}" type="text" data-in="cell" data-i="${i}" data-k="phone" value="${esc(r.phone)}" aria-label="Row ${i + 1} phone" style="min-width:130px"></td>
+        <td><input id="wz-s-${i}" type="text" data-in="cell" data-i="${i}" data-k="store" value="${esc(r.store)}" list="wz-stores" aria-label="Row ${i + 1} store" style="min-width:160px"></td>
+        <td>${r.err ? `<span class="msg-err">${r.err}</span>` : r.warn ? `<span class="msg-warn">${r.warn}</span>` : '<span class="msg-ok">OK</span>'}</td>
+        <td><button class="btn ghost sm" data-act="delRow" data-i="${i}" aria-label="Remove row ${i + 1}">Remove</button></td></tr>`).join('')}
+      </tbody></table></div><datalist id="wz-stores">${selStores().map(s => `<option value="${esc(s.name)}">`).join('')}</datalist>` : `<div class="empty"><b>No riders yet</b><span>Upload the filled template, or click “Use sample file” to see how validation works.</span></div>`}
+    </section>
+    <div class="btns" style="justify-content:space-between"><button class="btn" data-act="wizBack">‹ Back</button><button class="btn pri" data-act="wizNext" ${okN && !errs ? '' : 'disabled'}>Next: schedule ›</button></div>`;
+  }
+  if (W.step === 3) {
+    const ss = selStores();
+    body = `
+    <section class="card"><h2>Propose camp dates</h2><p class="muted small" style="margin:-6px 0 12px">We confirm within one working day. Stores with a confirmed camp keep their date and the new riders join it.</p>
+      <div class="tw"><table><thead><tr><th>Store</th><th class="r">New riders</th><th>Preferred date</th><th>Time slot</th></tr></thead><tbody>
+      ${ss.map((s, i) => { const n = W.rows.filter(r => !r.err && !r.warn && r.store.trim().toLowerCase() === s.name.toLowerCase()).length; const fixed = s.campDate && !s.campDone;
+        if (!W.dates[s.id]) W.dates[s.id] = addDays(TODAY, 4 + i); if (!W.slots[s.id]) W.slots[s.id] = 'Morning (10 am – 1 pm)';
+        return `<tr><td><b>${esc(s.name)}</b></td><td class="r num">${n}</td>
+        <td>${fixed ? `Joins camp on ${fmtLong(s.campDate)}` : `<input id="wz-d-${s.id}" type="date" min="${addDays(TODAY, 2)}" data-in="wzDate" data-id="${s.id}" value="${W.dates[s.id]}" style="width:auto">`}</td>
+        <td>${fixed ? esc(s.slot) : `<select id="wz-t-${s.id}" data-in="wzSlot" data-id="${s.id}" style="width:auto">${['Morning (10 am – 1 pm)','Afternoon (2 pm – 5 pm)','Evening (5 pm – 8 pm)'].map(t => `<option ${W.slots[s.id] === t ? 'selected' : ''}>${t}</option>`).join('')}</select>`}</td></tr>`; }).join('')}
+      </tbody></table></div>
+      <div class="field" style="margin-top:12px"><label for="wz-notes">Notes for the agency (optional)</label><textarea id="wz-notes" rows="2" data-in="wzNotes" placeholder="e.g. Police inspection on 30 Oct, please prioritise">${esc(W.notes)}</textarea></div></section>
+    <div class="btns" style="justify-content:space-between"><button class="btn" data-act="wizBack">‹ Back</button><button class="btn pri" data-act="wizSubmit">Submit drive</button></div>`;
+  }
+  return `<div class="wsteps">${st(1,'Stores')}${st(2,'Riders')}${st(3,'Schedule')}</div>${body}`;
+}
+function wizDone() {
+  const d = S.wiz.done;
+  return `<section class="card" style="display:grid;gap:14px">
+    <div><h2>Drive submitted</h2><p class="muted" style="margin:4px 0 0">${d.riders} riders across ${d.stores.length} stores. We'll confirm the camp dates; you'll see them on the Stores tab.</p></div>
+    <div><div class="label" style="margin-bottom:8px">Rider-app notification, ready to paste</div><div style="display:grid;gap:10px">
+    ${d.stores.map((s, i) => { const date = s.campDate && !s.campDone ? s.campDate : s.proposedDate; const txt = `PCC camp at ${s.name} on ${fmtLong(date)}, ${(s.campDate && !s.campDone ? s.slot : S.wiz.slots[s.id]).toLowerCase()}. Bring your Aadhaar card, the phone linked to Aadhaar (for OTP), an age proof (PAN, birth certificate or school leaving certificate) and an address proof. It takes about 10 minutes. Questions? Ask your store captain, ${s.captain}.`;
+      return `<div class="push"><div class="ch"><b>${esc(s.name)}</b><span class="faint small">${s.campDate && !s.campDone ? 'Confirmed' : 'Date pending confirmation'}</span></div><p id="push-${i}">${esc(txt)}</p><div><button class="btn sm" data-act="copy" data-target="push-${i}">Copy text</button></div></div>`; }).join('')}
+    </div></div>
+    <div class="btns"><button class="btn pri" data-act="wizView">View stores</button><button class="btn" data-act="wizReset">Start another drive</button></div></section>`;
+}
+
+// ---------- field agent ----------
+function agentView(r) {
+  const v = { ...r, docs: { ...r.docs } };
+  S.queue.filter(q => q.kind === 'patch' && q.id === r.id).forEach(q => { Object.assign(v, q.patch); if (q.patch.docs) v.docs = { ...q.patch.docs }; v.queued = true; });
+  return v;
+}
+function agentRiders(storeId) {
+  const base = riders.filter(r => r.storeId === storeId);
+  const adds = S.queue.filter(q => q.kind === 'add' && q.rider.storeId === storeId).map(q => ({ ...q.rider, queued: true }));
+  return [...base, ...adds].map(r => { const v = agentView(r); if (r.queued) v.queued = true; return v; });
+}
+function viewAgent() {
+  const top = `<div class="net"><button class="toggle ${S.offline ? 'off' : ''}" data-act="offline" aria-pressed="${!S.offline}"><i></i>${S.offline ? 'Offline' : 'Online'}</button>
+    ${S.queue.length ? `<span class="sync">${S.queue.length} update${S.queue.length > 1 ? 's' : ''} waiting to sync</span>` : `<span class="faint">All changes synced</span>`}</div>`;
+  let body;
+  if (!S.agentStoreId) body = agentCamps();
+  else if (!S.agentRiderId) body = agentRoster();
+  else body = agentRider();
+  return `<div class="head"><div><h1>Field agent app</h1><p>Phone view used at the camp. Turn it offline to see how updates queue up and sync when signal returns.</p></div></div>
+  <div class="phone"><div class="ph-top">${top}</div><div class="ph-body">${body}</div></div>`;
+}
+function agentCamps() {
+  const today = stores.filter(s => s.campDate === TODAY && !s.campDone);
+  const next = stores.filter(s => s.campDate > TODAY && !s.campDone).sort((a, b) => a.campDate.localeCompare(b.campDate));
+  return `<div><div class="label">Today · ${fmtLong(TODAY)}</div><h2 style="margin-top:2px">${today.length} camp${today.length === 1 ? '' : 's'} assigned</h2></div>
+    ${today.map(s => { const rs = agentRiders(s.id); const done = rs.filter(r => r.status !== 'requested').length; return `
+      <button class="campcard" data-act="agStore" data-id="${s.id}"><div class="ch"><b>${s.name}</b>${s.flagged ? '<span class="flag">Police flagged</span>' : ''}</div>
+      <span class="muted small">${s.address}</span><span class="small">Captain ${s.captain} · <span class="mono">${fmtPhone(s.captainPhone)}</span></span>
+      <div class="meter"><i style="width:${rs.length ? done / rs.length * 100 : 0}%"></i></div><span class="small"><b>${done}</b> of ${rs.length} riders processed</span></button>`; }).join('') || `<div class="empty"><b>No camps left today</b><span>Closed camps move to the back-office queue.</span></div>`}
+    ${next.length ? `<div class="label" style="margin-top:6px">Coming up</div>${next.map(s => `<div class="rrow" style="cursor:default"><span><b>${s.name}</b><br><span class="faint small">${storeRiders(s.id).length} riders</span></span><span class="small">${fmtLong(s.campDate)}</span></div>`).join('')}` : ''}`;
+}
+function agentRoster() {
+  const s = storeById(S.agentStoreId); const rs = agentRiders(s.id);
+  const groups = { todo: r => ['requested','account'].includes(r.status), done: r => ['captured','uploaded','challan'].includes(r.status), exc: r => ['noshow','docsmissing','haspcc'].includes(r.status) };
+  const list = rs.filter(groups[S.rTab]).filter(r => !S.rq || (r.name + r.phone).toLowerCase().includes(S.rq.toLowerCase()));
+  const t = (k, l) => `<button data-act="rTab" data-v="${k}" class="${S.rTab === k ? 'on' : ''}">${l}<span class="count">${rs.filter(groups[k]).length}</span></button>`;
+  return `<div><button class="back" data-act="agBack">‹ Today's camps</button><h2 style="margin-top:4px">${s.name}</h2><span class="faint small">${s.address}</span></div>
+    <input id="ag-q" type="search" data-in="rq" value="${esc(S.rq)}" placeholder="Search name or phone" aria-label="Search riders">
+    <nav class="tabs">${t('todo','To do')}${t('done','Done')}${t('exc','Exceptions')}</nav>
+    <div style="display:grid;gap:6px">${list.map(r => `<button class="rrow" data-act="agRider" data-id="${r.id}"><span><b>${esc(r.name)}</b><br><span class="faint small mono">${maskPhone(r.phone)}</span></span><span style="text-align:right">${chip(r.status)}${r.queued ? '<br><span class="q">Not synced</span>' : ''}</span></button>`).join('') || `<div class="empty">Nobody here.</div>`}</div>
+    ${S.walkin ? `<div class="sheet"><b>Add a walk-in rider</b><div class="field"><label for="wk-n">Name</label><input id="wk-n" type="text" data-in="wkName" value="${esc(S.walkin.name)}"></div><div class="field"><label for="wk-p">Phone</label><input id="wk-p" type="tel" data-in="wkPhone" value="${esc(S.walkin.phone)}" placeholder="10-digit mobile"></div><div class="btns"><button class="btn pri" data-act="wkSave">Add rider</button><button class="btn ghost" data-act="wkCancel">Cancel</button></div></div>`
+      : `<button class="btn big" data-act="wkOpen">+ Add walk-in rider</button>`}
+    <button class="btn pri big" data-act="closeCamp">Close camp</button>
+    <span class="faint small" style="text-align:center">Closing marks everyone still “Not started” as a no-show.</span>`;
+}
+function agentRider() {
+  const s = storeById(S.agentStoreId); const rs = agentRiders(s.id); const r = rs.find(x => x.id === S.agentRiderId);
+  if (!r) { S.agentRiderId = null; return agentRoster(); }
+  const isExc = ['noshow','docsmissing','haspcc'].includes(r.status);
+  const hasAcc = !['requested','noshow','haspcc'].includes(r.status);
+  if (!S.pid[r.id]) S.pid[r.id] = code(s) + 'PCC' + String(100000 + (parseInt(r.id.slice(1), 36) * 7919) % 899999);
+  const tile = (k, l, sub) => `<button class="doctile ${r.docs[k] ? 'ok' : ''}" data-act="cap" data-k="${k}">${r.docs[k] ? ICON_OK : ICON_CAM}<span>${l}</span><span class="small" style="font-weight:400">${r.docs[k] ? 'Captured' : sub}</span></button>`;
+  return `<div><button class="back" data-act="agBackRoster">‹ ${s.name}</button>
+    <div class="ch" style="margin-top:4px"><h2>${esc(r.name)}</h2>${chip(r.status)}</div><span class="faint small mono">${maskPhone(r.phone)}</span>${r.queued ? ' <span class="q">· Not synced</span>' : ''}</div>
+    ${isExc ? `<div class="sheet"><b>Marked as ${RST[r.status][0].toLowerCase()}</b><span class="muted small">This rider leaves the funnel and is not billed.</span><button class="btn" data-act="undoExc">Undo</button></div>` : `
+    <div class="sheet"><div class="ch"><b>1 · Government portal account</b>${hasAcc ? `<span class="ok small">Done</span>` : ''}</div>
+      ${hasAcc ? `<span class="small">Login ID <span class="mono">${r.portalId}</span></span>` : `
+      <span class="muted small">The rider enters the Aadhaar OTP on their own phone. Once the portal confirms, save the login ID.</span>
+      <div class="field"><label for="ag-pid">Portal login ID</label><input id="ag-pid" type="text" class="mono" data-in="pid" value="${esc(S.pid[r.id])}"></div>
+      <button class="btn pri big" data-act="acc">OTP verified · Account created</button>`}</div>
+    <div class="sheet ${hasAcc ? '' : 'lock'}"><div class="ch"><b>2 · Documents</b>${r.docs.age && r.docs.id && r.docs.addr ? `<span class="ok small">Done</span>` : ''}</div>
+      <div class="doctiles">${tile('age','Age proof','PAN / birth cert.')}${tile('id','ID proof','Aadhaar')}${tile('addr','Address proof','Aadhaar / bill')}</div>
+      <span class="faint small">Photos are auto-cropped. Aadhaar is masked to the last 4 digits before upload.</span></div>
+    <div class="sheet"><b>Can't continue?</b><div class="exrow"><button class="btn" data-act="exc" data-v="noshow">No-show</button><button class="btn" data-act="exc" data-v="docsmissing">Docs missing</button><button class="btn" data-act="exc" data-v="haspcc">Has a PCC</button></div></div>`}
+    <button class="btn big" data-act="nextRider">Next rider ›</button>`;
+}
+function agentDo(id, patch, text) {
+  if (S.offline) { S.queue.push({ kind: 'patch', id, patch, text }); return; }
+  applyPatch(id, patch, text, 'Imran (Field agent)');
+}
+function applyPatch(id, patch, text, who) {
+  const r = riders.find(x => x.id === id); if (!r) return;
+  Object.assign(r, patch); if (patch.docs) r.docs = { ...patch.docs };
+  r.updated = TODAY; if (text) log(r.storeId, who, text);
+}
+
+// ---------- back-office ----------
+function viewBO() {
+  const upload = riders.filter(r => r.status === 'captured').sort((a, b) => a.updated.localeCompare(b.updated));
+  const await_ = riders.filter(r => r.status === 'uploaded').sort((a, b) => a.updated.localeCompare(b.updated));
+  const reqs = stores.filter(s => s.proposedDate);
+  const t = (k, l, n) => `<button data-act="boTab" data-v="${k}" class="${S.boTab === k ? 'on' : ''}">${l}<span class="count">${n}</span></button>`;
+  let left = '', right = '';
+  if (S.boTab === 'requests') {
+    return `<div class="head"><div><h1>Back-office</h1><p>Work through riders captured at camps: upload their documents on the government portal, pay the fee, attach the challan.</p></div></div>
+    <nav class="tabs">${t('upload','To upload',upload.length)}${t('await','Awaiting challan',await_.length)}${t('tray','Review tray',S.tray.length)}${t('requests','Camp requests',reqs.length)}</nav>
+    <div class="tw"><table><thead><tr><th>Store</th><th>City</th><th class="r">Riders</th><th>Proposed date</th><th>Slot</th><th></th></tr></thead><tbody>
+    ${reqs.map(s => `<tr><td><b>${s.name}</b>${s.campDate ? ` <span class="faint small">reschedule from ${fmt(s.campDate)}</span>` : ''}</td><td>${s.city}</td><td class="r num">${storeRiders(s.id).length}</td><td>${fmtLong(s.proposedDate)}</td><td>${s.slot}</td><td class="r"><button class="btn pri sm" data-act="confirmCamp" data-id="${s.id}">Confirm date</button></td></tr>`).join('') || `<tr><td colspan="6"><div class="empty">No camp requests waiting.</div></td></tr>`}
+    </tbody></table></div>`;
+  }
+  const list = S.boTab === 'upload' ? upload : S.boTab === 'await' ? await_ : [];
+  if (S.boTab === 'tray') {
+    left = S.tray.length ? S.tray.map(x => `<div class="qitem"><span class="mono">${x.file}</span><span class="small muted">Name read as “${esc(x.readName)}” · ${x.no}</span>
+      <label class="small" for="tray-${x.file}">Match to rider</label><select id="tray-${x.file}" data-in="trayPick" data-f="${x.file}"><option value="">Choose a rider awaiting challan</option>${await_.map(r => `<option value="${r.id}" ${x.pick === r.id ? 'selected' : ''}>${esc(r.name)} · ${storeById(r.storeId).name}</option>`).join('')}</select>
+      <button class="btn pri sm" data-act="trayMatch" data-f="${x.file}" ${x.pick ? '' : 'disabled'}>Confirm match</button></div>`).join('') : `<div class="empty">Nothing to review. Challans the system can't match land here.</div>`;
+    right = `<div class="card"><h2>Why a review tray?</h2><p class="muted">Bulk uploads match each challan to a rider by application number, name and phone. When the scan is unclear, a person makes the final match so no rider is billed twice or missed.</p></div>`;
+  } else {
+    left = `${S.boTab === 'await' ? `<button class="btn" data-act="bulk" ${await_.length ? '' : 'disabled'}>Bulk upload challans (${await_.length})</button>` : ''}
+      ${S.bulk ? `<div class="sumbar">${S.bulk}</div>` : ''}
+      <div class="qlist">${list.map(r => `<button class="qitem ${S.boId === r.id ? 'on' : ''}" data-act="boPick" data-id="${r.id}"><span class="ch"><b>${esc(r.name)}</b><span class="faint small">${fmt(r.updated)}</span></span><span class="small muted">${storeById(r.storeId).name}</span></button>`).join('') || `<div class="empty">Queue is clear.</div>`}</div>`;
+    const r = riders.find(x => x.id === S.boId && list.includes(x));
+    right = r ? boDetail(r) : `<div class="card empty"><b>Pick a rider from the queue</b><span>Oldest first. Their documents and portal login open here.</span></div>`;
+  }
+  return `<div class="head"><div><h1>Back-office</h1><p>Work through riders captured at camps: upload their documents on the government portal, pay the fee, attach the challan.</p></div></div>
+  <nav class="tabs">${t('upload','To upload',upload.length)}${t('await','Awaiting challan',await_.length)}${t('tray','Review tray',S.tray.length)}${t('requests','Camp requests',reqs.length)}</nav>
+  <div class="bo"><div style="display:grid;gap:10px">${left}</div><div>${right}</div></div>`;
+}
+function boDetail(r) {
+  const s = storeById(r.storeId);
+  const shown = S.revealed[r.id];
+  const doc = (l, sub) => `<div class="doc"><div class="img">${sub}</div><div class="cap">${l}</div></div>`;
+  let action;
+  if (r.status === 'captured') action = `<button class="btn pri big" data-act="uploaded" data-id="${r.id}">Docs uploaded and ₹159 fee paid</button><span class="faint small">Do this on the portal first, then mark it here.</span>`;
+  else if (S.ocr && S.ocr.id === r.id) {
+    action = S.ocr.stage === 'reading' ? `<div class="drop"><span class="spin" aria-hidden="true"></span><span>Reading challan…</span></div>`
+      : `<div class="card" style="display:grid;gap:10px;background:var(--surface-2)"><b>Read from the challan</b>
+        <dl class="kv"><dt>Application no.</dt><dd class="mono">${S.ocr.no}</dd><dt>Applicant</dt><dd>${esc(r.name)} <span class="ok small">✓ matches</span></dd><dt>Mobile</dt><dd class="mono">${maskPhone(r.phone)} <span class="ok small">✓ matches</span></dd><dt>Fee</dt><dd>₹159.00</dd><dt>Payment date</dt><dd>${fmtLong(TODAY)}</dd></dl>
+        <div class="btns"><button class="btn pri" data-act="ocrConfirm" data-id="${r.id}">Confirm and mark challan generated</button><button class="btn ghost" data-act="ocrCancel">Cancel</button></div></div>`;
+  } else action = `<div class="drop"><b>Attach the challan PDF</b><span class="small muted">We read the application number, name, amount and date, then match it to this rider.</span><button class="btn pri" data-act="ocr" data-id="${r.id}">Choose challan PDF</button></div>`;
+  return `<section class="card" style="display:grid;gap:14px">
+    <div class="ch"><div><h2>${esc(r.name)}</h2><span class="muted small">${s.name} · camp ${fmt(s.campDate)}</span></div>${chip(r.status)}</div>
+    <dl class="kv"><dt>Mobile</dt><dd class="mono">${maskPhone(r.phone)}</dd><dt>Portal login ID</dt><dd class="mono">${r.portalId}</dd>
+      <dt>Portal password</dt><dd><span class="mono">${shown ? r.pwd : '••••••••'}</span> <button class="btn ghost sm" data-act="reveal" data-id="${r.id}">${shown ? 'Hide' : 'Reveal'}</button>${shown ? '<br><span class="faint small">Access logged under your name</span>' : ''}</dd></dl>
+    <div><div class="label" style="margin-bottom:6px">Captured documents</div><div class="docs">${doc('Age proof · PAN card', 'PAN ••••5K')}${doc('ID proof · Aadhaar', 'XXXX XXXX ' + r.phone.slice(-4))}${doc('Address proof · Aadhaar', 'XXXX XXXX ' + r.phone.slice(-4))}</div></div>
+    ${action}</section>`;
+}
+function makeChallan(r, d = TODAY) {
+  const s = storeById(r.storeId);
+  return { no: `PCC-${code(s)}-${d.slice(2, 4)}${d.slice(5, 7)}-${String(10000 + (parseInt(r.id.slice(1), 36) * 3571) % 89999)}`, date: d, amount: 159, txn: 'TXN' + String(10000000 + (parseInt(r.id.slice(1), 36) * 104729) % 89999999) };
+}
+
+// ---------- modal ----------
+function openChallan(r) {
+  const s = storeById(r.storeId); const c = r.challan;
+  const m = document.getElementById('modal');
+  m.innerHTML = `<div class="mbox" role="dialog" aria-modal="true" aria-label="Challan for ${esc(r.name)}">
+    <div class="receipt"><div class="wm" aria-hidden="true">SAMPLE</div>
+      <div class="rh"><div class="small muted">State police citizen services portal (sample)</div><div class="t">Acknowledgement receipt</div><div class="small">Police Clearance Certificate · online application</div></div>
+      <dl><dt>Application no.</dt><dd class="mono">${c.no}</dd><dt>Applicant</dt><dd>${esc(r.name)}</dd><dt>Mobile</dt><dd class="mono">${maskPhone(r.phone)}</dd><dt>Purpose</dt><dd>Employment verification</dd>
+      <dt>Fee paid</dt><dd>₹${c.amount}.00</dd><dt>Payment date</dt><dd>${fmtLong(c.date)} ${c.date.slice(0, 4)}</dd><dt>Payment ref.</dt><dd class="mono">${c.txn}</dd><dt>Client store</dt><dd>${s.name}, ${s.city}</dd></dl>
+      <div class="stamp">FEE RECEIVED<br>${fmt(c.date).toUpperCase()} ${c.date.slice(0, 4)}</div></div>
+    <div class="btns" style="justify-content:flex-end"><button class="btn" data-act="pdf">Download PDF</button><button class="btn pri" data-act="closeModal">Close</button></div></div>`;
+  m.hidden = false; m.querySelector('[data-act=closeModal]').focus();
+}
+
+// ---------- actions ----------
+const A = {
+  role: el => { S.role = el.dataset.v; try { history.replaceState(null, '', '#' + HASH[S.role]); } catch (e) {} window.scrollTo(0, 0); },
+  toCity: el => { S.role = 'ops'; S.opsTab = 'stores'; S.storeId = null; S.fCity = el.dataset.v; S.fStatus = 'all'; window.scrollTo(0, 0); },
+  openStoreOps: el => { S.role = 'ops'; S.opsTab = 'stores'; A.openStore(el); },
+  opsTab: el => { S.opsTab = el.dataset.v; S.storeId = null; },
+  fStatus: el => { S.fStatus = el.dataset.v; },
+  openStore: el => { S.storeId = el.dataset.id; S.rFilter = 'all'; S.addRider = null; S.resched = null; window.scrollTo(0, 0); },
+  closeStore: () => { S.storeId = null; },
+  rFilter: el => { S.rFilter = el.dataset.v; },
+  zip: el => { toast(`Preview only: a ZIP of ${metrics(storeRiders(el.dataset.id)).challan} challan PDFs would download here.`); return false; },
+  zipAll: () => { toast('Preview only: a ZIP of every challan in this period would download here.'); return false; },
+  pdf: () => { toast('Preview only: the challan PDF would download here.'); return false; },
+  tmpl: () => { toast('Preview only: the Excel template would download here. Try “Use sample file”.'); return false; },
+  resched: () => { S.resched = addDays(TODAY, 3); S.addRider = null; },
+  reschedCancel: () => { S.resched = null; },
+  reschedSend: () => { const s = storeById(S.storeId); s.proposedDate = S.resched; log(s.id, 'Neha (Business Ops)', `Reschedule requested for ${fmtLong(S.resched)}`); S.resched = null; toast('Reschedule request sent. The agency confirms it from Camp requests.'); },
+  addRiderOpen: () => { S.addRider = { name: '', phone: '' }; S.resched = null; },
+  addRiderCancel: () => { S.addRider = null; },
+  addRiderSave: () => {
+    const p = S.addRider.phone.replace(/\D/g, '');
+    if (!S.addRider.name.trim() || !/^[6-9]\d{9}$/.test(p)) { toast('Enter a name and a 10-digit mobile number.'); return false; }
+    const s = storeById(S.storeId); const r = mkRider(s, 'requested', null); r.name = S.addRider.name.trim(); r.phone = p; r.updated = TODAY; riders.push(r);
+    log(s.id, 'Neha (Business Ops)', `Added ${r.name} to the roster`); S.addRider = null; toast(`${r.name} added to ${s.name}.`);
+  },
+  viewChallan: el => { openChallan(riders.find(r => r.id === el.dataset.id)); return false; },
+  closeModal: () => { const m = document.getElementById('modal'); m.hidden = true; m.innerHTML = ''; return false; },
+  csv: () => { S.csv = !S.csv; },
+  copy: el => {
+    const t = document.getElementById(el.dataset.target); const text = t.value ?? t.textContent;
+    const done = () => toast('Copied.');
+    const fallback = () => { const rg = document.createRange(); rg.selectNodeContents(t); const sel = getSelection(); sel.removeAllRanges(); sel.addRange(rg); if (t.select) t.select(); toast('Selected. Press Ctrl+C or ⌘C to copy.'); };
+    try { navigator.clipboard.writeText(text).then(done, fallback); } catch (e) { fallback(); }
+    return false;
+  },
+  // wizard
+  addStore: () => {
+    const W = S.wiz, ns = W.ns;
+    if (!ns.name.trim()) { toast('Give the store a name.'); return false; }
+    if (allWizStores().some(s => s.name.toLowerCase() === ns.name.trim().toLowerCase())) { toast('A store with that name already exists.'); return false; }
+    const [lat, lng] = ns.gps.split(',').map(x => parseFloat(x));
+    const s = { id: 'n' + Date.now(), name: ns.name.trim(), city: ns.city, state: ns.city === 'Bengaluru' ? 'Karnataka' : 'Maharashtra', address: ns.address, lat: lat || 0, lng: lng || 0, flagged: false,
+      captain: ns.captain, captainPhone: ns.phone.replace(/\D/g, ''), campDate: null, campDone: false, proposedDate: null, slot: 'Morning (10 am – 1 pm)' };
+    W.added.push(s); W.sel.push(s.id); W.ns = { name: '', city: 'Mumbai', address: '', gps: '', captain: '', phone: '' };
+    toast(`${s.name} added and selected.`);
+  },
+  wizNext: () => { S.wiz.step++; window.scrollTo(0, 0); },
+  wizBack: () => { S.wiz.step--; },
+  sample: () => {
+    const ss = selStores(); const rows = [];
+    const used = new Set(riders.map(r => r.phone));
+    for (let i = 0; i < 12; i++) { let p; do { p = '90000' + int(10000, 99999); } while (used.has(p)); used.add(p); rows.push({ name: pick(FIRST) + ' ' + pick(LAST), phone: fmtPhone(p), store: ss[i % ss.length].name }); }
+    rows[2].phone = '90000 123';
+    rows[6].phone = rows[1].phone;
+    rows[9].store = ss[0].name.slice(0, -1);
+    const ex = riders.find(r => r.status === 'challan');
+    rows[11] = { name: ex.name, phone: fmtPhone(ex.phone), store: ss[0].name };
+    S.wiz.rows = rows;
+  },
+  addRow: () => { S.wiz.rows.push({ name: '', phone: '', store: selStores()[0].name }); },
+  delRow: el => { S.wiz.rows.splice(+el.dataset.i, 1); },
+  wizSubmit: () => {
+    const W = S.wiz; validate();
+    const rows = W.rows.filter(r => !r.err && !r.warn);
+    W.added.forEach(s => { if (!stores.includes(s)) stores.push(s); });
+    const ss = selStores();
+    ss.forEach(s => {
+      const n = rows.filter(r => r.store.trim().toLowerCase() === s.name.toLowerCase()).length;
+      if (s.campDate && !s.campDone) { log(s.id, 'Neha (Business Ops)', `${n} riders added to the camp on ${fmt(s.campDate)}`); return; }
+      s.campDone = false; s.campDate = null; s.proposedDate = W.dates[s.id]; s.slot = W.slots[s.id];
+      log(s.id, 'Neha (Business Ops)', `Drive requested for ${n} riders, proposed ${fmtLong(s.proposedDate)}${W.notes ? '. Note: ' + W.notes : ''}`);
+    });
+    rows.forEach(row => { const s = ss.find(x => x.name.toLowerCase() === row.store.trim().toLowerCase()); const r = mkRider(s, 'requested', null); r.name = row.name.trim(); r.phone = row.phone.replace(/\D/g, ''); r.updated = TODAY; riders.push(r); });
+    W.done = { riders: rows.length, stores: ss };
+    toast('Drive submitted.');
+  },
+  wizView: () => { S.wiz = null; S.opsTab = 'stores'; S.fCity = 'all'; S.fStatus = 'all'; },
+  wizReset: () => { S.wiz = null; },
+  // agent
+  offline: () => {
+    S.offline = !S.offline;
+    if (!S.offline && S.queue.length) {
+      const n = S.queue.length;
+      S.queue.forEach(q => { if (q.kind === 'add') { riders.push(q.rider); log(q.rider.storeId, 'Imran (Field agent)', `Walk-in added: ${q.rider.name}`); } else applyPatch(q.id, q.patch, q.text, 'Imran (Field agent)'); });
+      S.queue = []; toast(`Back online. ${n} update${n > 1 ? 's' : ''} synced to the client dashboard.`);
+    }
+  },
+  agStore: el => { S.agentStoreId = el.dataset.id; S.agentRiderId = null; S.rTab = 'todo'; S.rq = ''; S.walkin = null; },
+  agBack: () => { S.agentStoreId = null; },
+  agRider: el => { S.agentRiderId = el.dataset.id; },
+  agBackRoster: () => { S.agentRiderId = null; },
+  rTab: el => { S.rTab = el.dataset.v; },
+  acc: () => {
+    const pid = (S.pid[S.agentRiderId] || '').trim(); if (!pid) { toast('Enter the portal login ID.'); return false; }
+    const r = agentRiders(S.agentStoreId).find(x => x.id === S.agentRiderId);
+    agentDo(r.id, { status: 'account', portalId: pid, pwd: 'Qb#' + (1000 + pid.length * 731 % 8999) }, `Portal account created for ${r.name}`);
+    if (!S.offline) toast('Account saved. The client dashboard shows this rider as initiated.');
+  },
+  cap: el => {
+    const r = agentRiders(S.agentStoreId).find(x => x.id === S.agentRiderId);
+    const docs = { ...r.docs, [el.dataset.k]: !r.docs[el.dataset.k] };
+    const all = docs.age && docs.id && docs.addr;
+    const patch = { docs }; let text = null;
+    if (all && r.status === 'account') { patch.status = 'captured'; text = `Documents captured for ${r.name}`; }
+    if (!all && r.status === 'captured') patch.status = 'account';
+    agentDo(r.id, patch, text);
+    if (all && !S.offline && r.status === 'account') toast(`${r.name} is ready for back-office upload.`);
+  },
+  exc: el => {
+    const r = agentRiders(S.agentStoreId).find(x => x.id === S.agentRiderId);
+    agentDo(r.id, { status: el.dataset.v, prevStatus: r.status }, `${r.name} marked as ${RST[el.dataset.v][0].toLowerCase()}`);
+  },
+  undoExc: () => {
+    const r = agentRiders(S.agentStoreId).find(x => x.id === S.agentRiderId);
+    agentDo(r.id, { status: r.prevStatus || 'requested' }, `Exception cleared for ${r.name}`);
+  },
+  nextRider: () => {
+    const rs = agentRiders(S.agentStoreId).filter(r => ['requested','account'].includes(r.status) && r.id !== S.agentRiderId);
+    if (rs.length) S.agentRiderId = rs[0].id; else { S.agentRiderId = null; toast('Everyone on the to-do list is done.'); }
+  },
+  wkOpen: () => { S.walkin = { name: '', phone: '' }; },
+  wkCancel: () => { S.walkin = null; },
+  wkSave: () => {
+    const p = S.walkin.phone.replace(/\D/g, '');
+    if (!S.walkin.name.trim() || !/^[6-9]\d{9}$/.test(p)) { toast('Enter a name and a 10-digit mobile number.'); return false; }
+    const s = storeById(S.agentStoreId); const r = mkRider(s, 'requested', null); r.name = S.walkin.name.trim(); r.phone = p; r.walkin = true; r.updated = TODAY;
+    if (S.offline) S.queue.push({ kind: 'add', rider: r }); else { riders.push(r); log(s.id, 'Imran (Field agent)', `Walk-in added: ${r.name}`); }
+    S.walkin = null; S.agentRiderId = r.id;
+  },
+  closeCamp: () => {
+    if (S.offline) { toast('Go online to close the camp, so every update syncs first.'); return false; }
+    const s = storeById(S.agentStoreId); const rs = storeRiders(s.id);
+    const ns = rs.filter(r => r.status === 'requested'); ns.forEach(r => { r.status = 'noshow'; r.updated = TODAY; });
+    s.campDone = true;
+    log(s.id, 'Imran (Field agent)', `Camp closed: ${rs.filter(r => !['requested','noshow'].includes(r.status)).length} of ${rs.length} riders attended`);
+    toast(`${s.name} closed. ${ns.length} marked as no-show; captured riders move to the back-office queue.`);
+    S.agentStoreId = null; S.agentRiderId = null;
+  },
+  // back-office
+  boTab: el => { S.boTab = el.dataset.v; S.boId = null; S.ocr = null; S.bulk = null; },
+  boPick: el => { S.boId = el.dataset.id; S.ocr = null; },
+  reveal: el => { const id = el.dataset.id; S.revealed[id] = !S.revealed[id]; if (S.revealed[id]) { const r = riders.find(x => x.id === id); log(r.storeId, 'Asha (Back-office)', `Portal credentials viewed for ${r.name}`); } },
+  uploaded: el => {
+    const r = riders.find(x => x.id === el.dataset.id);
+    applyPatch(r.id, { status: 'uploaded' }, `Documents uploaded and fee paid for ${r.name}`, 'Asha (Back-office)');
+    const next = riders.filter(x => x.status === 'captured').sort((a, b) => a.updated.localeCompare(b.updated))[0];
+    S.boId = next ? next.id : null; toast(`${r.name} moved to Awaiting challan.`);
+  },
+  ocr: el => { const r = riders.find(x => x.id === el.dataset.id); S.ocr = { id: r.id, stage: 'reading', no: makeChallan(r).no }; setTimeout(() => { if (S.ocr && S.ocr.id === r.id) { S.ocr.stage = 'done'; render(); } }, 900); },
+  ocrCancel: () => { S.ocr = null; },
+  ocrConfirm: el => {
+    const r = riders.find(x => x.id === el.dataset.id);
+    applyPatch(r.id, { status: 'challan', challan: makeChallan(r) }, `Challan attached for ${r.name}`, 'Asha (Back-office)');
+    S.ocr = null;
+    const next = riders.filter(x => x.status === 'uploaded').sort((a, b) => a.updated.localeCompare(b.updated))[0];
+    S.boId = next ? next.id : null; toast(`Challan generated for ${r.name}. It's now in the client's challan vault.`);
+  },
+  bulk: () => {
+    const list = riders.filter(r => r.status === 'uploaded');
+    const miss = list.length > 1 ? list[list.length - 1] : null;
+    const hits = miss ? list.slice(0, -1) : list;
+    hits.forEach(r => applyPatch(r.id, { status: 'challan', challan: makeChallan(r) }, null, 'Asha (Back-office)'));
+    [...new Set(hits.map(r => r.storeId))].forEach(id => log(id, 'Asha (Back-office)', `${hits.filter(r => r.storeId === id).length} challans attached by bulk upload`));
+    if (miss) { const parts = miss.name.split(' '); S.tray.push({ file: `challan_scan_${String(S.tray.length + 14).padStart(3, '0')}.pdf`, readName: parts[0][0] + '. ' + parts[1].slice(0, -1), no: makeChallan(miss).no, pick: '' }); }
+    S.bulk = `<span><b>${list.length}</b> PDFs read</span><span class="msg-ok">${hits.length} matched automatically</span>${miss ? `<span class="msg-warn">1 sent to the review tray</span>` : ''}`;
+    S.boId = null;
+  },
+  trayMatch: el => {
+    const x = S.tray.find(t => t.file === el.dataset.f); const r = riders.find(y => y.id === x.pick);
+    applyPatch(r.id, { status: 'challan', challan: { ...makeChallan(r), no: x.no } }, `Challan matched by hand for ${r.name}`, 'Asha (Back-office)');
+    S.tray = S.tray.filter(t => t !== x); toast(`Matched to ${r.name}.`);
+  },
+  confirmCamp: el => {
+    const s = storeById(el.dataset.id); s.campDate = s.proposedDate; s.proposedDate = null; s.campDone = false;
+    log(s.id, 'ClearPass ops', `Camp confirmed for ${fmtLong(s.campDate)}`); toast(`${s.name}: camp confirmed for ${fmtLong(s.campDate)}.`);
+  },
+};
+const IN = {
+  lState: el => { S.lState = el.value; },
+  fCity: el => { S.fCity = el.value; },
+  q: el => { S.q = el.value; },
+  arName: el => { S.addRider.name = el.value; return false; },
+  arPhone: el => { S.addRider.phone = el.value; return false; },
+  resched: el => { S.resched = el.value; return false; },
+  bMonth: el => { S.bMonth = el.value; },
+  rate: el => { S.rate = Math.max(0, +el.value || 0); },
+  cq: el => { S.cq = el.value; },
+  pick: el => { const W = S.wiz, id = el.dataset.id; W.sel = el.checked ? [...W.sel, id] : W.sel.filter(x => x !== id); },
+  ns: el => { S.wiz.ns[el.dataset.k] = el.value; return false; },
+  cell: el => { S.wiz.rows[+el.dataset.i][el.dataset.k] = el.value; },
+  wzDate: el => { S.wiz.dates[el.dataset.id] = el.value; return false; },
+  wzSlot: el => { S.wiz.slots[el.dataset.id] = el.value; return false; },
+  wzNotes: el => { S.wiz.notes = el.value; return false; },
+  rq: el => { S.rq = el.value; },
+  pid: el => { S.pid[S.agentRiderId] = el.value; return false; },
+  wkName: el => { S.walkin.name = el.value; return false; },
+  wkPhone: el => { S.walkin.phone = el.value; return false; },
+  trayPick: el => { S.tray.find(t => t.file === el.dataset.f).pick = el.value; },
+};
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-act]'); if (!el) { if (e.target.id === 'modal') A.closeModal(); return; }
+  const fn = A[el.dataset.act]; if (!fn) return;
+  e.preventDefault();
+  if (fn(el, e) !== false) render();
+});
+document.addEventListener('input', e => {
+  const el = e.target, fn = IN[el.dataset.in]; if (!fn) return;
+  if (fn(el) !== false) render();
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && !document.getElementById('modal').hidden) A.closeModal();
+  if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('tr[data-act]')) { e.preventDefault(); e.target.click(); }
+});
+const fromHash = Object.entries(HASH).find(([, v]) => v === location.hash.slice(1));
+if (fromHash) S.role = fromHash[0];
+render();
+</script>
+</body>
+</html>
